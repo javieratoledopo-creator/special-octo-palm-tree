@@ -1,431 +1,194 @@
-name: Build Uktra Android AAB
+name: Uktra AAB
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-      - master
-
-permissions:
-  contents: read
 
 jobs:
   build:
-    name: Build AAB
     runs-on: ubuntu-latest
 
     steps:
-
-      # ============================================
-      # 1. Descargar repositorio
-      # ============================================
-
       - name: Checkout
         uses: actions/checkout@v4
 
-
-      # ============================================
-      # 2. Java
-      # ============================================
-
-      - name: Setup Java
+      - name: Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: "17"
 
-
-      # ============================================
-      # 3. Android SDK
-      # ============================================
-
-      - name: Setup Android
+      - name: Android SDK
         uses: android-actions/setup-android@v3
 
-
-      # ============================================
-      # 4. Crear carpetas Android
-      # ============================================
-
-      - name: Crear estructura
-        shell: bash
+      - name: Crear proyecto
         run: |
-          set -e
-
           mkdir -p android/app/src/main/java/com/javieratoledopo/uktra
           mkdir -p android/app/src/main/assets
           mkdir -p android/app/src/main/res/values
 
-
-      # ============================================
-      # 5. Copiar WEB COMPLETA
-      # ============================================
-
-      - name: Copiar sitio web
-        shell: bash
+      - name: Copiar web
         run: |
-          set -e
+          cp -r index.html android/app/src/main/assets/
+          [ -d css ] && cp -r css android/app/src/main/assets/ || true
+          [ -d js ] && cp -r js android/app/src/main/assets/ || true
+          [ -d assets ] && cp -r assets android/app/src/main/assets/ || true
+          [ -d images ] && cp -r images android/app/src/main/assets/ || true
 
-          shopt -s dotglob
-
-          for item in *; do
-
-            case "$item" in
-
-              android)
-                continue
-                ;;
-
-              .git)
-                continue
-                ;;
-
-              .github)
-                continue
-                ;;
-
-              *)
-                cp -R "$item" android/app/src/main/assets/
-                ;;
-
-            esac
-
-          done
-
-          echo "Archivos incluidos:"
-          find android/app/src/main/assets -type f
-
-
-      # ============================================
-      # 6. settings.gradle
-      # ============================================
-
-      - name: Crear settings.gradle
-        shell: bash
+      - name: settings.gradle
         run: |
-          cat > android/settings.gradle <<'EOF'
-pluginManagement {
-    repositories {
-        google()
-        mavenCentral()
-        gradlePluginPortal()
-    }
-}
+          printf '%s\n' \
+          'pluginManagement {' \
+          '    repositories {' \
+          '        google()' \
+          '        mavenCentral()' \
+          '        gradlePluginPortal()' \
+          '    }' \
+          '}' \
+          '' \
+          'dependencyResolutionManagement {' \
+          '    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)' \
+          '    repositories {' \
+          '        google()' \
+          '        mavenCentral()' \
+          '    }' \
+          '}' \
+          '' \
+          'rootProject.name = "Uktra"' \
+          'include ":app"' \
+          > android/settings.gradle
 
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-
-    repositories {
-        google()
-        mavenCentral()
-    }
-}
-
-rootProject.name = "Uktra"
-
-include(":app")
-EOF
-
-
-      # ============================================
-      # 7. build.gradle
-      # ============================================
-
-      - name: Crear build.gradle
-        shell: bash
+      - name: build.gradle
         run: |
-          cat > android/build.gradle <<'EOF'
-plugins {
-    id 'com.android.application' version '8.7.3' apply false
-}
-EOF
+          printf '%s\n' \
+          'plugins {' \
+          '    id "com.android.application" version "8.7.3" apply false' \
+          '}' \
+          > android/build.gradle
 
-
-      # ============================================
-      # 8. app/build.gradle
-      # ============================================
-
-      - name: Crear app build.gradle
-        shell: bash
+      - name: app build.gradle
         run: |
-          cat > android/app/build.gradle <<'EOF'
-plugins {
-    id 'com.android.application'
-}
+          printf '%s\n' \
+          'plugins {' \
+          '    id "com.android.application"' \
+          '}' \
+          '' \
+          'android {' \
+          '    namespace "com.javieratoledopo.uktra"' \
+          '    compileSdk 35' \
+          '' \
+          '    defaultConfig {' \
+          '        applicationId "com.javieratoledopo.uktra"' \
+          '        minSdk 23' \
+          '        targetSdk 35' \
+          '        versionCode 1' \
+          '        versionName "1.0"' \
+          '    }' \
+          '' \
+          '    signingConfigs {' \
+          '        release {' \
+          '            storeFile file("${rootProject.projectDir}/upload-keystore.jks")' \
+          '            storePassword System.getenv("KEYSTORE_PASSWORD")' \
+          '            keyAlias System.getenv("KEY_ALIAS")' \
+          '            keyPassword System.getenv("KEY_PASSWORD")' \
+          '        }' \
+          '    }' \
+          '' \
+          '    buildTypes {' \
+          '        release {' \
+          '            signingConfig signingConfigs.release' \
+          '        }' \
+          '    }' \
+          '}' \
+          > android/app/build.gradle
 
-android {
-    namespace 'com.javieratoledopo.uktra'
-
-    compileSdk 35
-
-    defaultConfig {
-        applicationId 'com.javieratoledopo.uktra'
-
-        minSdk 23
-
-        targetSdk 35
-
-        versionCode 1
-
-        versionName '1.0'
-    }
-
-    signingConfigs {
-        release {
-            storeFile file("${rootProject.projectDir}/upload-keystore.jks")
-
-            storePassword System.getenv("KEYSTORE_PASSWORD")
-
-            keyAlias System.getenv("KEY_ALIAS")
-
-            keyPassword System.getenv("KEY_PASSWORD")
-        }
-    }
-
-    buildTypes {
-        release {
-            minifyEnabled false
-
-            shrinkResources false
-
-            signingConfig signingConfigs.release
-        }
-    }
-}
-EOF
-
-
-      # ============================================
-      # 9. AndroidManifest
-      # ============================================
-
-      - name: Crear AndroidManifest
-        shell: bash
+      - name: Manifest
         run: |
-          cat > android/app/src/main/AndroidManifest.xml <<'EOF'
-<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+          printf '%s\n' \
+          '<?xml version="1.0" encoding="utf-8"?>' \
+          '<manifest xmlns:android="http://schemas.android.com/apk/res/android">' \
+          '    <uses-permission android:name="android.permission.INTERNET" />' \
+          '    <application android:theme="@style/AppTheme" android:label="Uktra">' \
+          '        <activity android:name=".MainActivity" android:exported="true">' \
+          '            <intent-filter>' \
+          '                <action android:name="android.intent.action.MAIN" />' \
+          '                <category android:name="android.intent.category.LAUNCHER" />' \
+          '            </intent-filter>' \
+          '        </activity>' \
+          '    </application>' \
+          '</manifest>' \
+          > android/app/src/main/AndroidManifest.xml
 
-    <uses-permission android:name="android.permission.INTERNET" />
-
-    <application
-        android:allowBackup="true"
-        android:usesCleartextTraffic="true"
-        android:label="Uktra"
-        android:theme="@style/AppTheme">
-
-        <activity
-            android:name=".MainActivity"
-            android:exported="true">
-
-            <intent-filter>
-
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-
-            </intent-filter>
-
-        </activity>
-
-    </application>
-
-</manifest>
-EOF
-
-
-      # ============================================
-      # 10. styles.xml
-      # ============================================
-
-      - name: Crear styles.xml
-        shell: bash
+      - name: Styles
         run: |
-          cat > android/app/src/main/res/values/styles.xml <<'EOF'
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
+          printf '%s\n' \
+          '<?xml version="1.0" encoding="utf-8"?>' \
+          '<resources>' \
+          '    <style name="AppTheme" parent="@android:style/Theme.Material.Light.NoActionBar">' \
+          '        <item name="android:fontFamily">sans</item>' \
+          '        <item name="android:colorAccent">#000000</item>' \
+          '    </style>' \
+          '</resources>' \
+          > android/app/src/main/res/values/styles.xml
 
-    <style
-        name="AppTheme"
-        parent="@android:style/Theme.Material.Light.NoActionBar">
-
-        <item name="android:fontFamily">sans</item>
-
-        <item name="android:colorAccent">#000000</item>
-
-        <item name="android:navigationBarColor">#FFFFFF</item>
-
-        <item name="android:statusBarColor">#FFFFFF</item>
-
-        <item name="android:windowLightStatusBar">true</item>
-
-    </style>
-
-</resources>
-EOF
-
-
-      # ============================================
-      # 11. MainActivity
-      # ============================================
-
-      - name: Crear MainActivity
-        shell: bash
+      - name: MainActivity
         run: |
           cat > android/app/src/main/java/com/javieratoledopo/uktra/MainActivity.java <<'EOF'
-package com.javieratoledopo.uktra;
+          package com.javieratoledopo.uktra;
 
-import android.app.Activity;
-import android.os.Bundle;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
+          import android.app.Activity;
+          import android.os.Bundle;
+          import android.webkit.WebSettings;
+          import android.webkit.WebView;
+          import android.webkit.WebViewClient;
 
-public class MainActivity extends Activity {
+          public class MainActivity extends Activity {
 
-    private WebView webView;
+              WebView webView;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
+              @Override
+              protected void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
 
-        super.onCreate(savedInstanceState);
+                  webView = new WebView(this);
 
-        webView = new WebView(this);
+                  WebSettings settings = webView.getSettings();
+                  settings.setJavaScriptEnabled(true);
+                  settings.setDomStorageEnabled(true);
+                  settings.setAllowFileAccess(true);
+                  settings.setAllowContentAccess(true);
 
-        WebSettings settings = webView.getSettings();
+                  webView.setWebViewClient(new WebViewClient());
 
-        settings.setJavaScriptEnabled(true);
+                  webView.loadUrl("file:///android_asset/index.html");
 
-        settings.setDomStorageEnabled(true);
+                  setContentView(webView);
+              }
 
-        settings.setDatabaseEnabled(true);
+              @Override
+              public void onBackPressed() {
+                  if (webView.canGoBack()) {
+                      webView.goBack();
+                  } else {
+                      super.onBackPressed();
+                  }
+              }
+          }
+          EOF
 
-        settings.setAllowFileAccess(true);
-
-        settings.setAllowContentAccess(true);
-
-        settings.setBuiltInZoomControls(false);
-
-        settings.setDisplayZoomControls(false);
-
-        settings.setJavaScriptCanOpenWindowsAutomatically(true);
-
-        settings.setSupportMultipleWindows(false);
-
-        webView.setWebViewClient(new WebViewClient());
-
-        webView.loadUrl(
-            "file:///android_asset/index.html"
-        );
-
-        setContentView(webView);
-    }
-
-    @Override
-    public void onBackPressed() {
-
-        if (webView != null && webView.canGoBack()) {
-
-            webView.goBack();
-
-        } else {
-
-            super.onBackPressed();
-
-        }
-
-    }
-}
-EOF
-
-
-      # ============================================
-      # 12. Descargar Gradle
-      # ============================================
-
-      - name: Descargar Gradle
-        shell: bash
+      - name: Gradle
         run: |
-          set -e
-
           cd android
-
-          curl -L \
-            -o gradle.zip \
-            https://services.gradle.org/distributions/gradle-8.10.2-bin.zip
-
+          curl -L -o gradle.zip https://services.gradle.org/distributions/gradle-8.10.2-bin.zip
           unzip -q gradle.zip
+          ./gradle-8.10.2/bin/gradle wrapper --gradle-version 8.10.2
 
-          mv gradle-8.10.2 gradle-dist
-
-          rm gradle.zip
-
-
-      # ============================================
-      # 13. Crear wrapper
-      # ============================================
-
-      - name: Crear Gradle Wrapper
-        shell: bash
-        run: |
-          set -e
-
-          cd android
-
-          ./gradle-dist/bin/gradle wrapper \
-            --gradle-version 8.10.2
-
-
-      # ============================================
-      # 14. Verificar XML
-      # ============================================
-
-      - name: Verificar archivos XML
-        shell: bash
-        run: |
-          set -e
-
-          echo "AndroidManifest:"
-          head -n 3 android/app/src/main/AndroidManifest.xml
-
-          echo "styles.xml:"
-          head -n 3 android/app/src/main/res/values/styles.xml
-
-
-      # ============================================
-      # 15. Crear firma
-      # ============================================
-
-      - name: Crear keystore
-        shell: bash
+      - name: Firma
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-
         run: |
-
-          set -e
-
-          if [ -z "$KEYSTORE_PASSWORD" ]; then
-            echo "Falta KEYSTORE_PASSWORD"
-            exit 1
-          fi
-
-          if [ -z "$KEY_ALIAS" ]; then
-            echo "Falta KEY_ALIAS"
-            exit 1
-          fi
-
-          if [ -z "$KEY_PASSWORD" ]; then
-            echo "Falta KEY_PASSWORD"
-            exit 1
-          fi
-
-          keytool \
-            -genkeypair \
-            -v \
+          keytool -genkeypair \
             -keystore android/upload-keystore.jks \
             -storetype PKCS12 \
             -alias "$KEY_ALIAS" \
@@ -434,105 +197,19 @@ EOF
             -validity 10000 \
             -storepass "$KEYSTORE_PASSWORD" \
             -keypass "$KEY_PASSWORD" \
-            -dname "CN=Uktra, OU=Uktra, O=Javiera, L=Chile, ST=Biobio, C=CL"
+            -dname "CN=Uktra,O=Uktra,C=CL"
 
-
-      # ============================================
-      # 16. Generar AAB
-      # ============================================
-
-      - name: Generar AAB
-        shell: bash
+      - name: AAB
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-
         run: |
-
-          set -e
-
           cd android
+          ./gradlew bundleRelease
 
-          ./gradlew \
-            bundleRelease \
-            --no-daemon \
-            --stacktrace
-
-
-      # ============================================
-      # 17. Generar APK
-      # ============================================
-
-      - name: Generar APK
-        shell: bash
-        env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-
-        run: |
-
-          set -e
-
-          cd android
-
-          ./gradlew \
-            assembleRelease \
-            --no-daemon
-
-
-      # ============================================
-      # 18. Mostrar resultados
-      # ============================================
-
-      - name: Mostrar archivos
-        shell: bash
-        run: |
-
-          echo "===================================="
-          echo "AAB"
-          echo "===================================="
-
-          ls -lh \
-            android/app/build/outputs/bundle/release/
-
-
-          echo "===================================="
-          echo "APK"
-          echo "===================================="
-
-          ls -lh \
-            android/app/build/outputs/apk/release/
-
-
-      # ============================================
-      # 19. Guardar AAB
-      # ============================================
-
-      - name: Subir AAB
+      - name: Guardar AAB
         uses: actions/upload-artifact@v4
-
         with:
-          name: uktra-release-aab
-
-          path:
-            android/app/build/outputs/bundle/release/app-release.aab
-
-          if-no-files-found: error
-
-
-      # ============================================
-      # 20. Guardar APK
-      # ============================================
-
-      - name: Subir APK
-        uses: actions/upload-artifact@v4
-
-        with:
-          name: uktra-release-apk
-
-          path:
-            android/app/build/outputs/apk/release/app-release.apk
-
-          if-no-files-found: error
+          name: Uktra-AAB
+          path: android/app/build/outputs/bundle/release/app-release.aab

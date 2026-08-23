@@ -1,0 +1,296 @@
+name: Build Android AAB
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v4
+
+      - name: Configurar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Configurar Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Crear estructura Android
+        shell: bash
+        run: |
+          mkdir -p android/app/src/main/java/com/javieratoledopo/uktra
+          mkdir -p android/app/src/main/assets
+          mkdir -p android/app/src/main/res/mipmap-hdpi
+          mkdir -p android/app/src/main/res/mipmap-mdpi
+          mkdir -p android/app/src/main/res/mipmap-xhdpi
+          mkdir -p android/app/src/main/res/mipmap-xxhdpi
+          mkdir -p android/app/src/main/res/mipmap-xxxhdpi
+
+      - name: Copiar página web
+        shell: bash
+        run: |
+          cp index.html android/app/src/main/assets/index.html
+
+      - name: Crear settings.gradle
+        shell: bash
+        run: |
+          cat > android/settings.gradle <<'EOF'
+          pluginManagement {
+              repositories {
+                  google()
+                  mavenCentral()
+                  gradlePluginPortal()
+              }
+          }
+
+          dependencyResolutionManagement {
+              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+
+          rootProject.name = "Uktra"
+          include(":app")
+          EOF
+
+      - name: Crear build.gradle
+        shell: bash
+        run: |
+          cat > android/build.gradle <<'EOF'
+          plugins {
+              id 'com.android.application' version '8.7.3' apply false
+          }
+          EOF
+
+      - name: Crear app build.gradle
+        shell: bash
+        run: |
+          cat > android/app/build.gradle <<'EOF'
+          plugins {
+              id 'com.android.application'
+          }
+
+          android {
+              namespace 'com.javieratoledopo.uktra'
+              compileSdk 35
+
+              defaultConfig {
+                  applicationId 'com.javieratoledopo.uktra'
+                  minSdk 23
+                  targetSdk 35
+                  versionCode 1
+                  versionName '1.0'
+              }
+
+              signingConfigs {
+                  release {
+                      storeFile file("${rootProject.projectDir}/upload-keystore.jks")
+                      storePassword System.getenv("KEYSTORE_PASSWORD")
+                      keyAlias System.getenv("KEY_ALIAS")
+                      keyPassword System.getenv("KEY_PASSWORD")
+                  }
+              }
+
+              buildTypes {
+                  release {
+                      minifyEnabled false
+                      signingConfig signingConfigs.release
+                  }
+              }
+          }
+
+          dependencies {
+              implementation 'androidx.appcompat:appcompat:1.7.0'
+              implementation 'androidx.webkit:webkit:1.12.1'
+          }
+          EOF
+
+      - name: Crear AndroidManifest.xml
+        shell: bash
+        run: |
+          mkdir -p android/app/src/main/res/values
+
+          cat > android/app/src/main/AndroidManifest.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+              <uses-permission android:name="android.permission.INTERNET" />
+
+              <application
+                  android:allowBackup="true"
+                  android:usesCleartextTraffic="true"
+                  android:label="Uktra"
+                  android:theme="@style/AppTheme">
+
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true">
+
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+
+                  </activity>
+
+              </application>
+
+          </manifest>
+          EOF
+
+      - name: Crear estilos
+        shell: bash
+        run: |
+          cat > android/app/src/main/res/values/styles.xml <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources>
+
+              <style name="AppTheme"
+                  parent="Theme.AppCompat.Light.NoActionBar">
+                  <item name="android:fontFamily">sans</item>
+                  <item name="android:windowActionModeOverlay">true</item>
+                  <item name="android:colorAccent">#000000</item>
+                  <item name="android:navigationBarColor">#FFFFFF</item>
+                  <item name="android:statusBarColor">#FFFFFF</item>
+                  <item name="android:windowLightStatusBar">true</item>
+              </style>
+
+          </resources>
+          EOF
+
+      - name: Crear MainActivity.java
+        shell: bash
+        run: |
+          cat > android/app/src/main/java/com/javieratoledopo/uktra/MainActivity.java <<'EOF'
+          package com.javieratoledopo.uktra;
+
+          import android.annotation.SuppressLint;
+          import android.app.Activity;
+          import android.os.Bundle;
+          import android.webkit.WebSettings;
+          import android.webkit.WebView;
+          import android.webkit.WebViewClient;
+
+          public class MainActivity extends Activity {
+
+              private WebView webView;
+
+              @SuppressLint("SetJavaScriptEnabled")
+              @Override
+              protected void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+
+                  webView = new WebView(this);
+
+                  WebSettings settings = webView.getSettings();
+
+                  settings.setJavaScriptEnabled(true);
+                  settings.setDomStorageEnabled(true);
+                  settings.setDatabaseEnabled(true);
+                  settings.setAllowFileAccess(true);
+                  settings.setAllowContentAccess(true);
+                  settings.setBuiltInZoomControls(false);
+                  settings.setDisplayZoomControls(false);
+                  settings.setJavaScriptCanOpenWindowsAutomatically(true);
+                  settings.setSupportMultipleWindows(false);
+
+                  webView.setWebViewClient(new WebViewClient());
+
+                  webView.loadUrl("file:///android_asset/index.html");
+
+                  setContentView(webView);
+              }
+
+              @Override
+              public void onBackPressed() {
+                  if (webView != null && webView.canGoBack()) {
+                      webView.goBack();
+                  } else {
+                      super.onBackPressed();
+                  }
+              }
+          }
+          EOF
+
+      - name: Descargar Gradle
+        shell: bash
+        run: |
+          cd android
+          curl -L -o gradle.zip \
+            https://services.gradle.org/distributions/gradle-8.10.2-bin.zip
+          unzip -q gradle.zip
+          mv gradle-8.10.2 gradle-dist
+          rm gradle.zip
+
+      - name: Crear Gradle wrapper
+        shell: bash
+        run: |
+          cd android
+          ./gradle-dist/bin/gradle wrapper --gradle-version 8.10.2
+
+      - name: Crear keystore
+        shell: bash
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_PASSWORD" ]; then
+            echo "ERROR: Falta KEYSTORE_PASSWORD en GitHub Secrets."
+            exit 1
+          fi
+
+          if [ -z "$KEY_ALIAS" ]; then
+            echo "ERROR: Falta KEY_ALIAS en GitHub Secrets."
+            exit 1
+          fi
+
+          if [ -z "$KEY_PASSWORD" ]; then
+            echo "ERROR: Falta KEY_PASSWORD en GitHub Secrets."
+            exit 1
+          fi
+
+          keytool -genkeypair \
+            -v \
+            -keystore android/upload-keystore.jks \
+            -storetype PKCS12 \
+            -alias "$KEY_ALIAS" \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -storepass "$KEYSTORE_PASSWORD" \
+            -keypass "$KEY_PASSWORD" \
+            -dname "CN=Javiera, OU=Uktra, O=Uktra, L=Chile, ST=Chile, C=CL"
+
+      - name: Compilar AAB
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          cd android
+          ./gradlew bundleRelease --no-daemon
+
+      - name: Subir AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: uktra-release-aab
+          path: android/app/build/outputs/bundle/release/app-release.aab
+
+      - name: Subir APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: uktra-release-apk
+          path: android/app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: ignore

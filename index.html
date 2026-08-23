@@ -1,0 +1,2280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>Ultra TV — Películas y Series en Streaming</title>
+<meta name="description" content="Ultra TV: plataforma de streaming con películas y series en HD para Android TV y móviles." />
+<meta name="theme-color" content="#0b0b0f" />
+<link rel="icon" href="https://cdn.phototourl.com/free/2026-08-06-7c352127-475e-4c93-9baa-1e05d88801e6.png" />
+<link rel="apple-touch-icon" href="https://cdn.phototourl.com/free/2026-08-06-7c352127-475e-4c93-9baa-1e05d88801e6.png" />
+<meta property="og:title" content="Ultra TV — Streaming de Películas y Series" />
+<meta property="og:description" content="Miles de películas y series en una sola app. Optimizada para Android TV y móviles." />
+<meta property="og:type" content="website" />
+<meta property="og:image" content="https://cdn.phototourl.com/free/2026-08-06-9dae8b6d-09f8-4681-91ee-ad0796ff0fe2.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://cdn.phototourl.com/free/2026-08-06-9dae8b6d-09f8-4681-91ee-ad0796ff0fe2.png" />
+<link rel="preconnect" href="https://image.tmdb.org" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dashjs@4.7.4/dist/dash.all.min.js"></script>
+<style>
+/* ============ ULTRA TV — DESIGN SYSTEM ============ */
+:root{
+  --bg:#07070b; --bg-2:#0d0d14; --surface:#14141d; --surface-2:#1c1c28;
+  --line:rgba(255,255,255,.10); --line-2:rgba(255,255,255,.18);
+  --fg:#f4f4f8; --fg-dim:#9a9aad;
+  --brand:#ff2b45; --brand-2:#ff6a2b; --brand-glow:0 0 0 3px rgba(255,43,69,.35);
+  --grad-brand:linear-gradient(100deg,#ff2b45,#ff6a2b);
+  --grad-fade:linear-gradient(to top,#07070b 6%,rgba(7,7,11,.75) 38%,rgba(7,7,11,0) 78%);
+  --r:14px; --shadow:0 20px 60px rgba(0,0,0,.65);
+  --row-gap:clamp(10px,1.2vw,18px);
+  --pad:clamp(16px,3.6vw,60px);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%}
+body{
+  background:var(--bg);color:var(--fg);font-family:Archivo,system-ui,-apple-system,"Segoe UI",sans-serif;
+  overflow-x:hidden;-webkit-font-smoothing:antialiased;
+}
+img{display:block;max-width:100%}
+button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit}
+input,select,textarea{font-family:inherit}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:#2a2a38;border-radius:20px}
+.hide{display:none !important}
+.ico{display:inline-flex;align-items:center;justify-content:center;width:1em;height:1em;vertical-align:-.15em}
+.ico svg{width:100%;height:100%}
+button .ico,.btn .ico{width:1.1em;height:1.1em}
+.icon-btn .ico{width:19px;height:19px}
+.menu-pop button .ico{width:16px;height:16px;flex:none}
+.spin{width:44px;height:44px;border-radius:50%;border:3px solid rgba(255,255,255,.15);border-top-color:var(--brand);animation:sp .8s linear infinite;margin:40px auto}
+@keyframes sp{to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes zoomBg{from{transform:scale(1.06)}to{transform:scale(1.14)}}
+
+/* ===== SPLASH ===== */
+#splash{position:fixed;inset:0;z-index:9000;background:radial-gradient(1200px 700px at 50% 40%,#1a0d12,#07070b 70%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;transition:opacity .6s}
+#splash img{width:min(320px,62vw);filter:drop-shadow(0 18px 45px rgba(255,43,69,.45));animation:fadeUp .8s both}
+.splash-bar{width:min(280px,55vw);height:4px;border-radius:9px;background:rgba(255,255,255,.12);overflow:hidden}
+.splash-bar i{display:block;height:100%;width:35%;background:var(--grad-brand);border-radius:9px;animation:load 1.5s ease-in-out infinite}
+@keyframes load{0%{margin-left:-35%}100%{margin-left:100%}}
+
+/* ===== SELECCIÓN TV / CELULAR ===== */
+#deviceChoice{position:fixed;inset:0;z-index:9500;background:radial-gradient(1200px 700px at 50% 40%,#1a0d12,#07070b 70%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px;text-align:center;animation:fadeUp .5s both}
+#deviceChoice img{width:min(220px,50vw);margin-bottom:10px}
+#deviceChoice h2{font-size:clamp(20px,3vw,28px);font-weight:800}
+#deviceChoice p{color:var(--fg-dim);font-size:14px;max-width:360px}
+.dc-grid{display:flex;gap:18px;margin-top:22px;flex-wrap:wrap;justify-content:center}
+.dc-opt{display:flex;flex-direction:column;align-items:center;gap:12px;width:170px;padding:26px 18px;border-radius:18px;
+  background:var(--surface);border:1px solid var(--line);font-weight:700;font-size:15px;transition:.2s}
+.dc-opt:hover,.dc-opt:focus-visible{background:var(--surface-2);border-color:var(--brand);transform:translateY(-3px)}
+
+/* ===== AUTH ===== */
+#auth{position:fixed;inset:0;z-index:8000;display:flex;align-items:center;justify-content:center;padding:24px;
+  background:linear-gradient(rgba(7,7,11,.82),rgba(7,7,11,.94)),var(--auth-bg) center/cover no-repeat}
+.auth-card{width:min(430px,100%);background:rgba(13,13,20,.86);backdrop-filter:blur(18px);border:1px solid var(--line);
+  border-radius:22px;padding:34px 30px;box-shadow:var(--shadow);animation:fadeUp .5s both}
+.auth-card img.logo{width:180px;margin:0 auto 22px}
+.auth-card h1{font-size:23px;margin:0 0 6px;letter-spacing:-.4px}
+.auth-card p.sub{color:var(--fg-dim);font-size:13.5px;margin:0 0 22px;line-height:1.5}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.10em;color:var(--fg-dim);margin-bottom:7px;font-weight:600}
+.inp{width:100%;padding:14px 15px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line);color:var(--fg);font-size:15px;outline:none;transition:.18s}
+.inp:focus{border-color:var(--brand);box-shadow:var(--brand-glow)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:13px 22px;border-radius:12px;font-weight:700;font-size:15px;transition:transform .15s,filter .2s,background .2s}
+/* Foco visible para navegación con control remoto de TV / teclado */
+.btn:focus-visible,.icon-btn:focus-visible,.card:focus-visible,a:focus-visible,select:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-offset:3px}
+.btn:active{transform:scale(.97)}
+.btn-brand{background:var(--grad-brand);color:#fff;box-shadow:0 10px 30px rgba(255,43,69,.35)}
+.btn-brand:hover{filter:brightness(1.1)}
+.btn-glass{background:rgba(255,255,255,.13);color:#fff;backdrop-filter:blur(8px)}
+.btn-glass:hover{background:rgba(255,255,255,.22)}
+.btn-line{border:1px solid var(--line-2);color:var(--fg)}
+.btn-line:hover{background:rgba(255,255,255,.08)}
+.btn-w{width:100%}
+.note{font-size:12.5px;color:var(--fg-dim);text-align:center;margin-top:18px;line-height:1.6}
+.err{background:rgba(255,43,69,.14);border:1px solid rgba(255,43,69,.4);color:#ffb3bd;padding:11px 13px;border-radius:10px;font-size:13.5px;margin-bottom:14px}
+.ok{background:rgba(46,204,113,.13);border:1px solid rgba(46,204,113,.4);color:#a8f0c6;padding:11px 13px;border-radius:10px;font-size:13.5px;margin-bottom:14px}
+
+/* ===== PROFILES ===== */
+#profiles{position:fixed;inset:0;z-index:7000;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;overflow:auto}
+#profiles h2{font-size:clamp(24px,3.4vw,40px);margin:0 0 34px;font-weight:800;letter-spacing:-.6px}
+.p-grid{display:flex;flex-wrap:wrap;gap:clamp(16px,2.5vw,34px);justify-content:center;max-width:900px}
+.p-item{width:clamp(96px,13vw,150px);text-align:center;animation:fadeUp .45s both}
+.p-item img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:14px;border:3px solid transparent;transition:.2s}
+.p-item:hover img,.p-item:focus-visible img{border-color:var(--brand);transform:scale(1.06)}
+.p-item span{display:block;margin-top:10px;font-size:14px;color:var(--fg-dim)}
+.p-item:hover span{color:#fff}
+.p-add{width:clamp(96px,13vw,150px);aspect-ratio:1;border-radius:14px;border:2px dashed var(--line-2);display:flex;align-items:center;justify-content:center;font-size:42px;color:var(--fg-dim)}
+.p-add:hover{border-color:var(--brand);color:#fff}
+
+/* ===== HEADER ===== */
+header{position:fixed;top:0;left:0;right:0;z-index:600;display:flex;align-items:center;gap:clamp(12px,2vw,30px);
+  padding:14px var(--pad);transition:background .35s,backdrop-filter .35s;background:linear-gradient(to bottom,rgba(7,7,11,.92),transparent)}
+header.solid{background:rgba(7,7,11,.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+header .logo{height:clamp(28px,3vw,40px);width:auto}
+nav{display:flex;gap:clamp(10px,1.4vw,22px);align-items:center;flex:1}
+nav button{font-size:14.5px;color:var(--fg-dim);font-weight:600;padding:7px 4px;border-bottom:2px solid transparent;transition:.2s}
+nav button:hover,nav button.active{color:#fff;border-color:var(--brand)}
+.h-right{display:flex;align-items:center;gap:12px}
+.icon-btn{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;background:rgba(255,255,255,.08);transition:.2s}
+.icon-btn:hover{background:rgba(255,255,255,.2)}
+.avatar-btn img{width:38px;height:38px;border-radius:10px;object-fit:cover;border:2px solid var(--line-2)}
+.menu-pop{position:absolute;top:64px;right:var(--pad);background:var(--surface);border:1px solid var(--line);border-radius:14px;
+  min-width:210px;padding:8px;box-shadow:var(--shadow);animation:fadeUp .2s both;z-index:900}
+.menu-pop button{display:flex;width:100%;gap:10px;align-items:center;padding:11px 12px;border-radius:9px;font-size:14px;text-align:left}
+.menu-pop button:hover{background:var(--surface-2)}
+
+/* ===== HERO ===== */
+#hero{position:relative;height:min(88vh,860px);min-height:460px;overflow:hidden}
+#hero .bgs{position:absolute;inset:0}
+#hero .bgs img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1.1s}
+#hero .bgs img.on{opacity:1;animation:zoomBg 9s linear both}
+#hero .shade{position:absolute;inset:0;background:var(--grad-fade)}
+#hero .shade2{position:absolute;inset:0;background:linear-gradient(to right,rgba(7,7,11,.94) 0%,rgba(7,7,11,.55) 45%,transparent 78%)}
+.hero-in{position:absolute;left:var(--pad);bottom:clamp(60px,9vh,120px);max-width:min(640px,80vw);z-index:3}
+.hero-logo{max-height:clamp(80px,13vh,150px);width:auto;margin-bottom:16px;filter:drop-shadow(0 8px 24px rgba(0,0,0,.8));animation:fadeUp .6s both}
+.hero-title{font-size:clamp(30px,5.2vw,64px);font-weight:900;line-height:1;letter-spacing:-1.5px;margin:0 0 14px;animation:fadeUp .6s both}
+.hero-meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px;font-size:14px;color:#cfcfdd;animation:fadeUp .7s both}
+.tag{padding:3px 9px;border-radius:6px;border:1px solid var(--line-2);font-size:12px;font-weight:700;letter-spacing:.05em}
+.tag.q{background:var(--grad-brand);border-color:transparent;color:#fff}
+.hero-ov{font-size:clamp(13.5px,1.15vw,16px);line-height:1.6;color:#d5d5e2;margin:0 0 22px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;animation:fadeUp .8s both}
+.hero-btns{display:flex;gap:12px;flex-wrap:wrap;animation:fadeUp .9s both}
+.hero-dots{position:absolute;right:var(--pad);bottom:clamp(60px,9vh,120px);display:flex;gap:8px;z-index:3}
+.hero-dots i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.3);cursor:pointer;transition:.25s}
+.hero-dots i.on{width:26px;border-radius:9px;background:var(--brand)}
+
+/* ===== ROWS ===== */
+main{padding-bottom:80px}
+.rows{margin-top:-28px;position:relative;z-index:5}
+.row{margin-bottom:clamp(24px,3vh,42px)}
+.row h3{font-size:clamp(16px,1.5vw,22px);font-weight:700;margin:0 0 12px;padding:0 var(--pad);letter-spacing:-.3px}
+.strip{display:flex;gap:var(--row-gap);overflow-x:auto;padding:6px var(--pad) 18px;scroll-behavior:smooth;scrollbar-width:none}
+.strip::-webkit-scrollbar{display:none}
+.card{flex:0 0 auto;width:clamp(120px,13vw,190px);border-radius:10px;overflow:hidden;position:relative;background:var(--surface);
+  transition:transform .25s cubic-bezier(.2,.7,.3,1),box-shadow .25s;outline:none}
+.card img{width:100%;aspect-ratio:2/3;object-fit:cover;background:var(--surface-2)}
+.card:hover,.card:focus-visible{transform:scale(1.09);z-index:9;box-shadow:0 18px 40px rgba(0,0,0,.7),0 0 0 3px var(--brand)}
+.card .lbl{position:absolute;left:0;right:0;bottom:0;padding:22px 9px 8px;background:linear-gradient(transparent,rgba(0,0,0,.92));
+  font-size:12.5px;font-weight:600;opacity:0;transition:.2s;line-height:1.3}
+.card:hover .lbl,.card:focus-visible .lbl{opacity:1}
+.card .badge{position:absolute;top:7px;left:7px;background:var(--grad-brand);font-size:10px;font-weight:800;padding:3px 7px;border-radius:5px;letter-spacing:.05em}
+.card .prog{position:absolute;left:0;bottom:0;height:4px;background:var(--brand)}
+.card.wide{width:clamp(200px,22vw,330px)}
+.card.wide img{aspect-ratio:16/9}
+.empty{padding:0 var(--pad);color:var(--fg-dim);font-size:14px}
+
+/* ===== GRID PAGE ===== */
+.page{padding:100px var(--pad) 60px;min-height:100vh;animation:fadeIn .35s both}
+.page h2{font-size:clamp(22px,3vw,34px);font-weight:800;margin:0 0 6px;letter-spacing:-.6px}
+.page .lead{color:var(--fg-dim);font-size:14px;margin:0 0 26px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(110px,13vw,170px),1fr));gap:clamp(10px,1.4vw,20px)}
+.chips{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:22px}
+.chip{padding:8px 15px;border-radius:30px;border:1px solid var(--line);font-size:13.5px;font-weight:600;color:var(--fg-dim);transition:.2s}
+.chip.on,.chip:hover{background:var(--grad-brand);border-color:transparent;color:#fff}
+
+/* ===== MODAL / DETAIL ===== */
+.overlay{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);overflow:auto;padding:40px 16px;animation:fadeIn .25s both}
+.sheet{max-width:920px;margin:0 auto;background:var(--bg-2);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:var(--shadow);animation:fadeUp .35s both}
+.sheet .hd{position:relative;aspect-ratio:16/8;background:var(--surface)}
+.sheet .hd img{width:100%;height:100%;object-fit:cover}
+.sheet .hd .fade{position:absolute;inset:0;background:linear-gradient(to top,var(--bg-2),transparent 65%)}
+.sheet .hd .info{position:absolute;left:clamp(18px,3vw,36px);bottom:20px;right:20px}
+.sheet .hd .info img.lg{max-height:76px;margin-bottom:12px}
+.sheet .hd h2{font-size:clamp(22px,3.4vw,40px);font-weight:900;margin:0;letter-spacing:-1px}
+.close-x{position:absolute;top:14px;right:14px;width:38px;height:38px;border-radius:50%;background:rgba(0,0,0,.65);display:grid;place-items:center;font-size:20px;z-index:5}
+.sheet .bd{padding:clamp(18px,3vw,32px)}
+.sheet .bd p.ov{font-size:14.5px;line-height:1.65;color:#cbcbdb;margin:0 0 18px}
+.kv{display:flex;flex-wrap:wrap;gap:8px 22px;font-size:13px;color:var(--fg-dim);margin-bottom:20px}
+.kv b{color:#fff;font-weight:600}
+.sec-t{font-size:16px;font-weight:700;margin:26px 0 12px}
+.cast{display:flex;gap:14px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none}
+.cast::-webkit-scrollbar{display:none}
+.cast div{flex:0 0 auto;width:92px;text-align:center;font-size:12px;color:var(--fg-dim)}
+.cast img{width:92px;height:92px;border-radius:50%;object-fit:cover;margin-bottom:7px;background:var(--surface-2)}
+.eps{display:flex;flex-direction:column;gap:10px}
+.ep{display:flex;gap:14px;padding:10px;border-radius:12px;background:var(--surface);border:1px solid transparent;transition:.2s;text-align:left;align-items:center}
+.ep:hover,.ep:focus-visible{background:var(--surface-2);border-color:var(--brand)}
+.ep img{width:130px;aspect-ratio:16/9;object-fit:cover;border-radius:8px;flex:0 0 auto;background:var(--surface-2)}
+.ep .t{font-size:14.5px;font-weight:600;margin-bottom:4px}
+.ep .d{font-size:12.5px;color:var(--fg-dim);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* ===== PLAYER ===== */
+#player{position:fixed;inset:0;z-index:5000;background:#000;display:flex;align-items:center;justify-content:center}
+#vid{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
+#player video{width:100%;height:100%;background:#000}
+.pl-ui{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;pointer-events:none;
+  background:linear-gradient(rgba(0,0,0,.6),transparent 22%,transparent 62%,rgba(0,0,0,.85));transition:opacity .3s}
+.pl-ui.hidden{opacity:0;pointer-events:none}
+.pl-top{display:flex;align-items:center;gap:14px;padding:18px 22px;pointer-events:auto}
+.pl-top .ttl{font-size:clamp(15px,1.6vw,21px);font-weight:700}
+.pl-bot{padding:14px 22px 22px;display:flex;flex-direction:column;gap:12px;pointer-events:auto}
+.bar{height:5px;border-radius:9px;background:rgba(255,255,255,.22);position:relative;cursor:pointer}
+.bar i{position:absolute;inset:0 auto 0 0;background:var(--grad-brand);border-radius:9px;width:0}
+.bar b{position:absolute;top:50%;width:13px;height:13px;border-radius:50%;background:#fff;transform:translate(-50%,-50%);left:0}
+.pl-ctrls{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.pl-ctrls .t{font-size:12.5px;color:#cfcfdd;font-variant-numeric:tabular-nums}
+.pl-ctrls select{background:rgba(255,255,255,.12);border:1px solid var(--line);border-radius:9px;color:#fff;padding:7px 10px;font-size:13px}
+.pl-ctrls select option{background:#14141d}
+.next-up{position:absolute;right:22px;bottom:110px;background:rgba(13,13,20,.95);border:1px solid var(--line);border-radius:14px;padding:14px 16px;width:280px;box-shadow:var(--shadow);animation:fadeUp .3s both}
+
+/* ===== ADMIN / SELLER ===== */
+.panel{padding:96px var(--pad) 70px;min-height:100vh;animation:fadeIn .3s both}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:26px;border-bottom:1px solid var(--line);padding-bottom:12px}
+.tabs button{padding:9px 16px;border-radius:10px;font-size:13.5px;font-weight:600;color:var(--fg-dim)}
+.tabs button.on{background:var(--grad-brand);color:#fff}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:28px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px}
+.stat .n{font-size:32px;font-weight:900;background:var(--grad-brand);-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat .l{font-size:12.5px;color:var(--fg-dim);text-transform:uppercase;letter-spacing:.09em;margin-top:4px}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:20px}
+.box h4{margin:0 0 16px;font-size:16px}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{text-align:left;padding:11px 10px;border-bottom:1px solid var(--line)}
+th{color:var(--fg-dim);font-size:11.5px;text-transform:uppercase;letter-spacing:.08em}
+.pill{padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;background:rgba(255,255,255,.1)}
+.pill.ok{background:rgba(46,204,113,.2);color:#7ff0b0}
+.pill.no{background:rgba(255,43,69,.2);color:#ffa3b0}
+.tbl-wrap{overflow-x:auto}
+.mini{padding:7px 12px;border-radius:8px;font-size:12.5px;font-weight:600}
+.res{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px;max-height:380px;overflow:auto;margin-top:14px}
+.res .card{width:100%}
+.switch{display:flex;align-items:center;gap:10px;font-size:14px}
+.switch i{width:44px;height:25px;border-radius:20px;background:#333;position:relative;transition:.2s}
+.switch i:after{content:'';position:absolute;top:3px;left:3px;width:19px;height:19px;border-radius:50%;background:#fff;transition:.2s}
+.switch.on i{background:var(--brand)}
+.switch.on i:after{left:22px}
+
+/* ===== TOAST ===== */
+#toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);z-index:9500;display:flex;flex-direction:column;gap:9px;align-items:center}
+.tst{background:var(--surface-2);border:1px solid var(--line-2);border-radius:12px;padding:12px 20px;font-size:14px;box-shadow:var(--shadow);animation:fadeUp .3s both}
+
+/* ===== SEARCH ===== */
+#searchbar{position:fixed;top:0;left:0;right:0;z-index:1200;background:rgba(7,7,11,.97);backdrop-filter:blur(16px);padding:18px var(--pad);border-bottom:1px solid var(--line);animation:fadeIn .2s both}
+#searchbar input{width:100%;background:transparent;border:0;outline:none;color:#fff;font-size:clamp(20px,3vw,30px);font-weight:700}
+
+/* ===== TV MODE ===== */
+body.tv{font-size:17px}
+body.tv .card:focus{transform:scale(1.13);box-shadow:0 0 0 4px var(--brand),0 24px 50px rgba(0,0,0,.8)}
+body.tv .btn:focus,body.tv nav button:focus,body.tv .chip:focus,body.tv .ep:focus{box-shadow:0 0 0 4px var(--brand);outline:none;border-radius:12px}
+body.tv #hero{height:82vh}
+body.tv .btn{padding:16px 28px;font-size:17px}
+body.tv nav button{font-size:16px;padding:10px 16px}
+body.tv .hero-btns{gap:18px}
+body.tv .row h3{font-size:22px}
+:focus-visible{outline:none}
+
+@media(max-width:760px){
+  nav{overflow-x:auto;scrollbar-width:none}
+  nav::-webkit-scrollbar{display:none}
+  .hero-in{max-width:100%;right:var(--pad);bottom:70px}
+  .hero-dots{bottom:34px;left:var(--pad);right:auto}
+  .rows{margin-top:-16px}
+  .ep img{width:104px}
+  .sheet .hd{aspect-ratio:16/10}
+  /* Reproductor: que entre cómodo en pantalla de celular */
+  .pl-top{padding:12px 12px;gap:10px}
+  .pl-top .ttl{font-size:14px;max-width:60vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pl-bot{padding:8px 12px 16px;gap:8px}
+  .pl-ctrls{gap:8px}
+  .pl-ctrls .btn{padding:9px 12px;font-size:12.5px;gap:5px}
+  .pl-ctrls .t{font-size:11px;order:5;flex:0 0 100%;text-align:center}
+  .pl-ctrls select{padding:6px 8px;font-size:11.5px;max-width:84px}
+  #plPlay{padding:9px 13px}
+  .icon-btn{width:36px;height:36px}
+  .bar{height:7px}
+  .bar b{width:16px;height:16px}
+  .next-up{right:12px;left:12px;width:auto;bottom:96px;padding:12px 14px}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ SPLASH ============ -->
+<div id="splash">
+  <img src="https://cdn.phototourl.com/free/2026-08-06-7c352127-475e-4c93-9baa-1e05d88801e6.png" alt="Ultra TV" />
+  <div class="splash-bar"><i></i></div>
+</div>
+
+<!-- ============ AUTH ============ -->
+<div id="auth" class="hide"></div>
+
+<!-- ============ PROFILES ============ -->
+<div id="profiles" class="hide"></div>
+
+<!-- ============ APP ============ -->
+<div id="app" class="hide">
+  <header id="hdr">
+    <img class="logo" src="https://cdn.phototourl.com/free/2026-08-06-7c352127-475e-4c93-9baa-1e05d88801e6.png" alt="Ultra TV" />
+    <nav id="nav"></nav>
+    <div class="h-right">
+      <button class="icon-btn" id="btnSearch" aria-label="Buscar"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span></button>
+      <button class="avatar-btn" id="btnAvatar" aria-label="Perfil"><img id="hdrAvatar" alt="Perfil" /></button>
+    </div>
+  </header>
+  <main id="view"></main>
+</div>
+
+<div id="modal"></div>
+<div id="player" class="hide"></div>
+<div id="toast"></div>
+
+<script type="module">
+/* ============================================================
+   ULTRA TV — Aplicación completa (single file)
+   Firebase Auth + Firestore + Storage + Messaging + Analytics
+   TMDB API · Reproductor HLS/DASH/MP4/MKV · Android TV + Móvil
+   ============================================================ */
+import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+import { getAnalytics, isSupported as analyticsSupported, logEvent }
+  from "https://www.gstatic.com/firebasejs/12.17.1/firebase-analytics.js";
+import {
+  getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
+  signOut, onAuthStateChanged, sendPasswordResetEmail, updateProfile, updatePassword
+} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+import {
+  getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc,
+  deleteDoc, query, where, orderBy, limit, serverTimestamp, onSnapshot, increment
+} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+import { getStorage, ref as sRef, uploadBytes, getDownloadURL }
+  from "https://www.gstatic.com/firebasejs/12.17.1/firebase-storage.js";
+
+/* ---------- Firebase config ---------- */
+const firebaseConfig = {
+  apiKey: "AIzaSyCLLSijfHCArQ7jAC7IVyW8W4HaAscWfuo",
+  authDomain: "oktf-38850.firebaseapp.com",
+  projectId: "oktf-38850",
+  storageBucket: "oktf-38850.firebasestorage.app",
+  messagingSenderId: "129919125300",
+  appId: "1:129919125300:web:9f403830862b42d72c8761",
+  measurementId: "G-T5FT0B2L9R"
+};
+const fbApp = initializeApp(firebaseConfig);
+const auth = getAuth(fbApp);
+const db = getFirestore(fbApp);
+const storage = getStorage(fbApp);
+let analytics = null;
+analyticsSupported().then(ok => { if (ok) analytics = getAnalytics(fbApp); }).catch(()=>{});
+const track = (n, p = {}) => { try { analytics && logEvent(analytics, n, p); } catch (e) {} };
+
+/* ---------- Crear usuarios sin perder la sesión actual ----------
+   createUserWithEmailAndPassword cambia automáticamente la sesión activa del SDK
+   al usuario recién creado. Para evitar que eso cierre/cambie la sesión de quien
+   está creando la cuenta (admin o vendedor), se usa una app secundaria de Firebase,
+   totalmente aislada, solo para el alta. La app principal (auth) nunca se toca. */
+async function createAuxUser(email, pass) {
+  const auxApp = initializeApp(firebaseConfig, "aux-" + Date.now() + "-" + Math.random().toString(36).slice(2));
+  const auxAuth = getAuth(auxApp);
+  try {
+    const cred = await createUserWithEmailAndPassword(auxAuth, email, pass);
+    return cred.user.uid;
+  } finally {
+    try { await signOut(auxAuth); } catch (e) {}
+    try { await deleteApp(auxApp); } catch (e) {}
+  }
+}
+
+/* ---------- Constantes ---------- */
+const LOGO   = "https://cdn.phototourl.com/free/2026-08-06-7c352127-475e-4c93-9baa-1e05d88801e6.png";
+const BANNER = "https://cdn.phototourl.com/free/2026-08-06-9dae8b6d-09f8-4681-91ee-ad0796ff0fe2.png";
+const AVATARS = [
+  "https://cdn.phototourl.com/free/2026-08-06-eff891c0-76c7-495d-bc58-37903f2f914a.jpg",
+  "https://cdn.phototourl.com/free/2026-08-06-6170ed20-567f-4617-9d21-b5c8a149f2eb.jpg",
+  "https://cdn.phototourl.com/free/2026-08-06-05c24abc-bf07-4c4c-b8f5-a46ac2da9432.jpg",
+  "https://cdn.phototourl.com/free/2026-08-06-0da07988-7a55-45a1-8fba-37ffa51e04c4.jpg",
+  "https://cdn.phototourl.com/free/2026-08-06-ae3d62fc-8a7f-4cb9-9aa2-60180a8e8d73.jpg",
+  "https://cdn.phototourl.com/free/2026-08-06-f6f8fa40-21b1-4877-8bd6-c866a9ec5f22.jpg"
+];
+const IMG = (p, s = "w500") => p ? `https://image.tmdb.org/t/p/${s}${p}` : "";
+const PH = "data:image/svg+xml;utf8," + encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" width="300" height="450"><rect width="100%" height="100%" fill="#1c1c28"/><text x="50%" y="50%" fill="#4a4a5e" font-family="sans-serif" font-size="20" text-anchor="middle">ULTRA TV</text></svg>`);
+const ADMIN_EMAIL = "administrador@gmail.com";
+const ADMIN_PASS  = "admin@ultratv2026";
+/* Límite de dispositivos conectados por cuenta de cliente (no aplica a admin/vendedor) */
+const MAX_DEVICES = 4;
+const DEVICE_STALE_MS = 20 * 60 * 1000; /* 20 min sin actividad = el dispositivo se considera libre */
+
+/* ---------- Subida de video a Cloudflare R2 (vía Worker), en paralelo por partes ---------- */
+const R2_UPLOAD_BASE = "https://ultratv-upload.javieratoledopo.workers.dev/upload";
+const R2_UPLOAD_SECRET = "ultratv-x7k29fL8qP3mN5vR";
+const R2_PART_SIZE = 40 * 1024 * 1024;   // 40MB por parte
+const R2_CONCURRENCY = 5;                // partes subiendo al mismo tiempo
+
+function r2Post(path, body) {
+  return fetch(R2_UPLOAD_BASE + path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Upload-Secret": R2_UPLOAD_SECRET },
+    body: JSON.stringify(body)
+  }).then(async r => {
+    if (!r.ok) throw new Error("Error del servidor de subida (" + r.status + ")");
+    return r.json();
+  });
+}
+function xhrPutSingle(file, onProgress) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", R2_UPLOAD_BASE);
+    xhr.setRequestHeader("X-Upload-Secret", R2_UPLOAD_SECRET);
+    xhr.setRequestHeader("X-Filename", file.name);
+    xhr.setRequestHeader("Content-Type", file.type || "video/mp4");
+    xhr.upload.onprogress = e => { if (e.lengthComputable && onProgress) onProgress(e.loaded / e.total * 100); };
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try { resolve(JSON.parse(xhr.responseText).url); }
+        catch (e) { reject(new Error("Respuesta inválida del servidor de subida")); }
+      } else reject(new Error(xhr.status === 401 ? "Clave de subida incorrecta" : "Error subiendo el archivo (" + xhr.status + ")"));
+    };
+    xhr.onerror = () => reject(new Error("Error de red al subir el archivo"));
+    xhr.send(file);
+  });
+}
+function xhrPutPart(key, uploadId, partNumber, blob, onFrac) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", `${R2_UPLOAD_BASE}/part?key=${encodeURIComponent(key)}&uploadId=${encodeURIComponent(uploadId)}&partNumber=${partNumber}`);
+    xhr.setRequestHeader("X-Upload-Secret", R2_UPLOAD_SECRET);
+    xhr.upload.onprogress = e => { if (e.lengthComputable && onFrac) onFrac(e.loaded / e.total); };
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try { resolve(JSON.parse(xhr.responseText).etag); }
+        catch (e) { reject(new Error("Respuesta inválida al subir una parte")); }
+      } else reject(new Error("Error subiendo una parte (" + xhr.status + ")"));
+    };
+    xhr.onerror = () => reject(new Error("Error de red subiendo una parte"));
+    xhr.send(blob);
+  });
+}
+async function uploadVideoToR2(file, onProgress) {
+  /* Archivos chicos: un solo tramo (ya es rápido, no vale la pena partirlo) */
+  if (file.size <= R2_PART_SIZE) return xhrPutSingle(file, onProgress);
+
+  /* Archivos grandes: varias partes subiendo en simultáneo */
+  const { key, uploadId } = await r2Post("/init", { filename: file.name, contentType: file.type || "video/mp4" });
+  const totalParts = Math.ceil(file.size / R2_PART_SIZE);
+  const partBytes = new Array(totalParts).fill(0);
+  const parts = new Array(totalParts);
+  const report = () => onProgress && onProgress(partBytes.reduce((a, b) => a + b, 0) / file.size * 100);
+
+  const uploadOnePart = async partNumber => {
+    const start = (partNumber - 1) * R2_PART_SIZE;
+    const end = Math.min(start + R2_PART_SIZE, file.size);
+    const blob = file.slice(start, end);
+    const size = end - start;
+    for (let attempt = 1; ; attempt++) {
+      try {
+        const etag = await xhrPutPart(key, uploadId, partNumber, blob, frac => { partBytes[partNumber - 1] = size * frac; report(); });
+        partBytes[partNumber - 1] = size; report();
+        parts[partNumber - 1] = { partNumber, etag };
+        return;
+      } catch (e) { if (attempt >= 3) throw e; }
+    }
+  };
+
+  let next = 1;
+  const runners = Array.from({ length: Math.min(R2_CONCURRENCY, totalParts) }, async () => {
+    while (next <= totalParts) { const p = next++; await uploadOnePart(p); }
+  });
+  try {
+    await Promise.all(runners);
+  } catch (e) {
+    r2Post("/abort", { key, uploadId }).catch(() => {});
+    throw e;
+  }
+  const done = await r2Post("/complete", { key, uploadId, parts });
+  return done.url;
+}
+/* Crea un bloque de UI reutilizable: input file + barra de progreso, que al terminar llama a onDone(url) */
+function mountUploader(containerId, onDone) {
+  const box = el(containerId);
+  box.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <label class="btn btn-line mini" style="cursor:pointer">${ic("plus")} Subir video
+        <input type="file" accept="video/*" style="display:none" class="up-file" />
+      </label>
+      <span class="up-status" style="font-size:12.5px;color:var(--fg-dim)"></span>
+    </div>
+    <div class="bar up-bar hide" style="height:6px;margin-top:8px;max-width:320px"><i class="up-fill" style="width:0%"></i></div>`;
+  const fileInp = box.querySelector(".up-file");
+  const bar = box.querySelector(".up-bar");
+  const fill = box.querySelector(".up-fill");
+  const status = box.querySelector(".up-status");
+  fileInp.onchange = async () => {
+    const file = fileInp.files[0]; if (!file) return;
+    bar.classList.remove("hide"); fill.style.width = "0%";
+    status.textContent = `Subiendo ${file.name}… (0%)`;
+    try {
+      const url = await uploadVideoToR2(file, pct => { fill.style.width = pct.toFixed(0) + "%"; status.textContent = `Subiendo ${file.name}… (${pct.toFixed(0)}%)`; });
+      status.textContent = "Subida completa ✓";
+      onDone(url);
+      toast("Video subido a la nube");
+    } catch (e) {
+      status.textContent = "Error: " + e.message;
+      toast("No se pudo subir el video");
+    } finally {
+      fileInp.value = "";
+    }
+  };
+}
+
+/* ---------- Iconos (SVG inline, reemplazan emojis) ---------- */
+const ICONS = {
+  search:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
+  users:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+  edit:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
+  plus:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+  logout:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>`,
+  play:     `<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"/></svg>`,
+  pause:    `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>`,
+  check:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+  close:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+  film:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="18" rx="2"/><line x1="7" y1="3" x2="7" y2="21"/><line x1="17" y1="3" x2="17" y2="21"/><line x1="2" y1="8" x2="7" y2="8"/><line x1="2" y1="16" x2="7" y2="16"/><line x1="17" y1="8" x2="22" y2="8"/><line x1="17" y1="16" x2="22" y2="16"/></svg>`,
+  star:     `<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.63 22 9.24 16.5 13.97 18.18 20.9 12 17.1 5.82 20.9 7.5 13.97 2 9.24 8.91 8.63 12 2"/></svg>`,
+  chevronL: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>`,
+  chevronR: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`,
+  rewind10: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><polyline points="3 4 3 10 9 10"/></svg>`,
+  forward10:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><polyline points="21 4 21 10 15 10"/></svg>`,
+  expand:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>`,
+  refresh:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>`,
+  arrowR:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>`,
+  trash:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`,
+  youtube:  `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14C19.51 3.5 12 3.5 12 3.5s-7.51 0-9.38.55A3.02 3.02 0 0 0 .5 6.19 31.6 31.6 0 0 0 0 12a31.6 31.6 0 0 0 .5 5.81 3.02 3.02 0 0 0 2.12 2.14C4.49 20.5 12 20.5 12 20.5s7.51 0 9.38-.55a3.02 3.02 0 0 0 2.12-2.14A31.6 31.6 0 0 0 24 12a31.6 31.6 0 0 0-.5-5.81zM9.55 15.57V8.43L15.82 12l-6.27 3.57z"/></svg>`
+};
+const ic = (name, cls = "") => `<span class="ico ${cls}">${ICONS[name] || ""}</span>`;
+
+/* ---------- TMDB ---------- */
+const TMDB_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJiNThhYWY1ZDk1NGY5Y2Q4MjRkNjQ0N2Y5ZmQzMjU5MiIsIm5iZiI6MTc4Mjc3MTc5Ny4yMDQsInN1YiI6IjZhNDJmMDU1OTcwNzU2ODVlOTRjYzljZiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.KKjS1mOz5unZXyYs4ndtWWYhnxp2_BITlCuRB7cP2Rc";
+const tmdbCache = new Map();
+async function tmdb(path, params = {}) {
+  const url = new URL("https://api.themoviedb.org/3" + path);
+  url.searchParams.set("language", "es-ES");
+  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+  const key = url.toString();
+  if (tmdbCache.has(key)) return tmdbCache.get(key);
+  const res = await fetch(key, { headers: { Authorization: "Bearer " + TMDB_TOKEN, accept: "application/json" } });
+  if (!res.ok) throw new Error("TMDB " + res.status);
+  const data = await res.json();
+  tmdbCache.set(key, data);
+  return data;
+}
+const T = {
+  search:   (q, type = "multi") => tmdb(`/search/${type}`, { query: q, include_adult: "false" }),
+  movie:    id => tmdb(`/movie/${id}`, { append_to_response: "credits,images,videos,recommendations", include_image_language: "es,en,null" }),
+  tv:       id => tmdb(`/tv/${id}`,   { append_to_response: "credits,images,videos,recommendations", include_image_language: "es,en,null" }),
+  season:   (id, n) => tmdb(`/tv/${id}/season/${n}`),
+  trending: () => tmdb("/trending/all/week"),
+  discover: (type, params) => tmdb(`/discover/${type}`, params),
+  now:      () => tmdb("/movie/now_playing", { region: "MX" })
+};
+const pickLogo = imgs => {
+  const l = imgs?.logos || [];
+  return (l.find(x => x.iso_639_1 === "es") || l.find(x => x.iso_639_1 === "en") || l[0])?.file_path || "";
+};
+
+/* ---------- Estado ---------- */
+const S = {
+  user: null, role: null, account: null, profile: null,
+  content: [], settings: { heroEnabled: true },
+  page: "inicio", genres: [], heroIdx: 0, heroTimer: null,
+  isTV: false, unsub: [], deviceHeartbeat: null
+};
+const GENRES = ["Acción","Terror","Comedia","Infantil","Anime","Ciencia ficción","Drama","Romance","Aventura","Documental"];
+
+/* ---------- Utilidades UI ---------- */
+const $ = s => document.querySelector(s);
+const el = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+function toast(msg, ms = 3000) {
+  const d = document.createElement("div");
+  d.className = "tst"; d.textContent = msg;
+  el("toast").appendChild(d);
+  setTimeout(() => { d.style.opacity = 0; setTimeout(() => d.remove(), 300); }, ms);
+}
+function copyText(txt, label) {
+  const done = () => toast((label ? label + " copiado" : "Copiado"));
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(txt).then(done).catch(() => fallbackCopy(txt, done));
+  } else fallbackCopy(txt, done);
+}
+function fallbackCopy(txt, done) {
+  const ta = document.createElement("textarea");
+  ta.value = txt; ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand("copy"); done && done(); } catch (e) { toast("No se pudo copiar"); }
+  ta.remove();
+}
+function showCredsModal(title, email, pass, note) {
+  el("modal").innerHTML = `<div class="overlay"><div class="sheet" style="max-width:440px"><div class="bd">
+    <h2 style="margin:0 0 6px;font-size:21px">${esc(title)}</h2>
+    <p class="note" style="text-align:left;margin:0 0 18px">Guarda o comparte estas credenciales ahora; no se volverán a mostrar.</p>
+    <div class="field"><label>Correo</label>
+      <div style="display:flex;gap:8px">
+        <input class="inp" id="ccEmail" readonly value="${esc(email)}" />
+        <button class="btn btn-line" id="ccCopyEmail" style="flex:none">Copiar</button>
+      </div></div>
+    <div class="field"><label>Contraseña</label>
+      <div style="display:flex;gap:8px">
+        <input class="inp" id="ccPass" readonly value="${esc(pass)}" />
+        <button class="btn btn-line" id="ccCopyPass" style="flex:none">Copiar</button>
+      </div></div>
+    <button class="btn btn-brand btn-w" id="ccCopyAll" style="margin-top:6px">Copiar correo y contraseña</button>
+    <button class="btn btn-line btn-w" id="ccClose" style="margin-top:10px">Cerrar</button>
+  </div></div></div>`;
+  el("ccCopyEmail").onclick = () => copyText(email, "Correo");
+  el("ccCopyPass").onclick = () => copyText(pass, "Contraseña");
+  el("ccCopyAll").onclick = () => copyText(`Correo: ${email}\nContraseña: ${pass}`, "Credenciales");
+  el("ccClose").onclick = () => { el("modal").innerHTML = ""; };
+}
+/* ---------- Editar usuario (nombre y contraseña) desde el panel ----------
+   Para cambiar la contraseña sin afectar la sesión de quien administra, se
+   inicia sesión como ese usuario (con su contraseña actual, guardada al
+   crearlo) en una app secundaria y aislada de Firebase, se cambia ahí, y se
+   cierra esa sesión auxiliar. Esto requiere que la contraseña del usuario se
+   haya guardado en su documento; las cuentas creadas antes de esta función no
+   la tienen, así que en ese caso se debe usar "Restablecer por correo". */
+function editUserModal(u, onSaved) {
+  el("modal").innerHTML = `<div class="overlay"><div class="sheet" style="max-width:460px"><div class="bd">
+    <h2 style="margin:0 0 18px;font-size:21px">Editar usuario</h2>
+    <div class="field"><label>Correo</label><input class="inp" value="${esc(u.email)}" disabled /></div>
+    <div class="field"><label>Nombre / referencia</label><input class="inp" id="euNote" value="${esc(u.note || "")}" /></div>
+    <div class="field"><label>Nueva contraseña (déjala en blanco para no cambiarla)</label><input class="inp" id="euPass" placeholder="Mínimo 6 caracteres" /></div>
+    <div style="display:flex;gap:10px;margin-top:6px">
+      <button class="btn btn-brand" style="flex:1" id="euSave">Guardar</button>
+      <button class="btn btn-line" id="euCancel">Cancelar</button>
+    </div>
+    ${!u.pass ? `<div class="note" style="text-align:left">Esta cuenta se creó antes de guardar contraseñas.
+      <button class="btn btn-line mini" id="euReset" type="button" style="margin-top:6px;display:block">Enviar restablecimiento por correo</button></div>` : ""}
+  </div></div></div>`;
+  el("euCancel").onclick = () => { el("modal").innerHTML = ""; };
+  if (el("euReset")) el("euReset").onclick = async () => {
+    try { await sendPasswordResetEmail(auth, u.email); toast("Correo de restablecimiento enviado"); }
+    catch (e) { toast("No se pudo enviar: " + e.message); }
+  };
+  el("euSave").onclick = async () => {
+    const note = el("euNote").value.trim();
+    const newPass = el("euPass").value;
+    if (newPass && newPass.length < 6) return toast("La contraseña debe tener 6+ caracteres");
+    const go = el("euSave"); go.disabled = true; const prevTxt = go.textContent; go.textContent = "Guardando...";
+    try {
+      await updateDoc(doc(db, "users", u.id), { note });
+      if (newPass) {
+        if (!u.pass) throw new Error("No se guardó la contraseña original; usa el restablecimiento por correo.");
+        const auxApp = initializeApp(firebaseConfig, "aux-pw-" + Date.now() + "-" + Math.random().toString(36).slice(2));
+        const auxAuth = getAuth(auxApp);
+        try {
+          const cred = await signInWithEmailAndPassword(auxAuth, u.email, u.pass);
+          await updatePassword(cred.user, newPass);
+        } finally {
+          try { await signOut(auxAuth); } catch (e) {}
+          try { await deleteApp(auxApp); } catch (e) {}
+        }
+        await updateDoc(doc(db, "users", u.id), { pass: newPass });
+      }
+      toast("Usuario actualizado" + (newPass ? " · contraseña cambiada" : ""));
+      el("modal").innerHTML = "";
+      onSaved && onSaved();
+    } catch (e) {
+      toast("Error: " + (e.message || e.code || "no se pudo actualizar"));
+    } finally {
+      go.disabled = false; go.textContent = prevTxt;
+    }
+  };
+}
+const fmtTime = s => {
+  if (!isFinite(s)) return "0:00";
+  s = Math.floor(s);
+  const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60;
+  return h ? `${h}:${String(m).padStart(2,"0")}:${String(x).padStart(2,"0")}` : `${m}:${String(x).padStart(2,"0")}`;
+};
+
+/* ---------- Detección de dispositivo ---------- */
+function detectDevice() {
+  const saved = localStorage.getItem("utv_device_mode");
+  let tv;
+  if (saved === "tv" || saved === "mobile") {
+    tv = saved === "tv";
+  } else {
+    const ua = navigator.userAgent.toLowerCase();
+    tv = /android tv|googletv|smart-tv|smarttv|bravia|aft|crkey|hbbtv|netcast|web0s|tizen/.test(ua)
+      || (window.innerWidth >= 1280 && !("ontouchstart" in window) && /android/.test(ua));
+  }
+  S.isTV = tv;
+  document.body.classList.toggle("tv", tv);
+}
+detectDevice();
+
+/* Pregunta TV o Celular/PC la primera vez que se abre la app (o cuando no hay preferencia guardada) */
+function ensureDeviceChoice() {
+  return new Promise(resolve => {
+    if (localStorage.getItem("utv_device_mode")) return resolve();
+    const d = document.createElement("div");
+    d.id = "deviceChoice";
+    d.innerHTML = `
+      <img src="${LOGO}" alt="Ultra TV" />
+      <h2>¿Dónde vas a ver Ultra TV?</h2>
+      <p>Podés cambiarlo después desde el menú de tu perfil.</p>
+      <div class="dc-grid">
+        <button class="dc-opt" data-m="mobile"><span class="ico" style="width:38px;height:38px">${ICONS.play}</span><span>Celular o PC</span></button>
+        <button class="dc-opt" data-m="tv"><span class="ico" style="width:38px;height:38px">${ICONS.expand}</span><span>Televisor</span></button>
+      </div>`;
+    document.body.appendChild(d);
+    d.querySelectorAll("[data-m]").forEach(b => b.onclick = () => {
+      localStorage.setItem("utv_device_mode", b.dataset.m);
+      detectDevice();
+      d.remove();
+      resolve();
+    });
+  });
+}
+/* Permite cambiar el modo más adelante desde el menú del perfil */
+function setDeviceMode(mode) {
+  localStorage.setItem("utv_device_mode", mode);
+  detectDevice();
+  toast(mode === "tv" ? "Modo Televisor activado" : "Modo Celular/PC activado");
+}
+
+/* ---------- Navegación DPAD (control remoto) ---------- */
+const FOCUSABLE = 'button,[tabindex="0"],input,select,.card,.ep,.chip';
+document.addEventListener("keydown", e => {
+  const k = e.key;
+  if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(k)) {
+    const cur = document.activeElement;
+    const list = [...document.querySelectorAll(FOCUSABLE)].filter(n => n.offsetParent !== null);
+    if (!list.length) return;
+    if (!cur || cur === document.body) { list[0].focus(); e.preventDefault(); return; }
+    const cr = cur.getBoundingClientRect();
+    let best = null, bd = Infinity;
+    for (const n of list) {
+      if (n === cur) continue;
+      const r = n.getBoundingClientRect();
+      const dx = (r.left + r.width/2) - (cr.left + cr.width/2);
+      const dy = (r.top + r.height/2) - (cr.top + cr.height/2);
+      const ok = k === "ArrowRight" ? dx > 12 : k === "ArrowLeft" ? dx < -12 : k === "ArrowDown" ? dy > 12 : dy < -12;
+      if (!ok) continue;
+      const axis = (k === "ArrowLeft" || k === "ArrowRight") ? Math.abs(dx) + Math.abs(dy) * 3 : Math.abs(dy) + Math.abs(dx) * 3;
+      if (axis < bd) { bd = axis; best = n; }
+    }
+    if (best) { best.focus(); best.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" }); e.preventDefault(); }
+  }
+  if (k === "Backspace" || k === "Escape" || k === "BrowserBack") {
+    if (!el("player").classList.contains("hide")) { closePlayer(); e.preventDefault(); }
+    else if (el("modal").innerHTML) { el("modal").innerHTML = ""; e.preventDefault(); }
+  }
+});
+
+/* ---------- Atrás físico del control remoto (Android TV) / navegador / gesto móvil -----------
+   El botón o gesto Atrás dispara "popstate" (navegación del historial). Se mantiene
+   una entrada "colchón" en el historial para poder interceptarlo: cada vez que
+   ocurre un popstate, primero se resuelve dentro de la app (cerrar reproductor >
+   cerrar modal > volver a Inicio si se está en otra sección) y se repone el colchón,
+   así ese Atrás no sale de la app. La única excepción es estando ya en Inicio sin
+   nada abierto: ahí se piden 3 toques seguidos de Atrás (en menos de 2.5s) para
+   salir de verdad, como el patrón típico de "Presiona de nuevo para salir" en TV. */
+function pushBackGuard() { try { history.pushState({ utv: true }, "", location.href); } catch (e) {} }
+pushBackGuard();
+let exitTapCount = 0;
+let exitTapTimer = null;
+window.addEventListener("popstate", () => {
+  if (!el("player").classList.contains("hide")) { closePlayer(); exitTapCount = 0; return pushBackGuard(); }
+  if (el("modal").innerHTML) { el("modal").innerHTML = ""; exitTapCount = 0; return pushBackGuard(); }
+  if (S.page && S.page !== "inicio") { route("inicio"); exitTapCount = 0; return pushBackGuard(); }
+  exitTapCount++;
+  clearTimeout(exitTapTimer);
+  if (exitTapCount >= 3) { exitTapCount = 0; return; } /* se deja avanzar la navegación real: la app se cierra */
+  toast(`Presiona Atrás ${3 - exitTapCount} ${3 - exitTapCount === 1 ? "vez" : "veces"} más para salir`);
+  exitTapTimer = setTimeout(() => { exitTapCount = 0; }, 2500);
+  pushBackGuard();
+});
+
+/* ============================================================
+   AUTENTICACIÓN — sin registro público
+   ============================================================ */
+function renderAuth(msg = "", type = "err") {
+  const a = el("auth");
+  a.style.setProperty("--auth-bg", `url('${BANNER}')`);
+  a.classList.remove("hide");
+  a.innerHTML = `
+    <div class="auth-card">
+      <img class="logo" src="${LOGO}" alt="Ultra TV" />
+      <h1>Inicia sesión</h1>
+      <p class="sub">Accede con la cuenta que te entregó tu punto de venta autorizado.</p>
+      ${msg ? `<div class="${type}">${esc(msg)}</div>` : ""}
+      <form id="loginForm">
+        <div class="field"><label>Correo electrónico</label>
+          <input class="inp" type="email" id="lgEmail" autocomplete="username" required placeholder="tucorreo@ejemplo.com" /></div>
+        <div class="field"><label>Contraseña</label>
+          <input class="inp" type="password" id="lgPass" autocomplete="current-password" required placeholder="••••••••" /></div>
+        <button class="btn btn-brand btn-w" type="submit" id="lgBtn">Entrar</button>
+      </form>
+      <button class="btn btn-line btn-w" id="lgForgot" style="margin-top:10px">¿Olvidaste tu contraseña?</button>
+      <p class="note">¿No tienes cuenta? Solicítala con un distribuidor autorizado de Ultra TV.</p>
+    </div>`;
+  el("loginForm").onsubmit = async ev => {
+    ev.preventDefault();
+    const btn = el("lgBtn"); btn.disabled = true; btn.textContent = "Verificando…";
+    try {
+      await signInWithEmailAndPassword(auth, el("lgEmail").value.trim(), el("lgPass").value);
+      track("login", { method: "password" });
+    } catch (err) {
+      btn.disabled = false; btn.textContent = "Entrar";
+      const map = {
+        "auth/invalid-credential": "Correo o contraseña incorrectos.",
+        "auth/user-not-found": "Correo o contraseña incorrectos.",
+        "auth/wrong-password": "Correo o contraseña incorrectos.",
+        "auth/too-many-requests": "Demasiados intentos. Espera unos minutos.",
+        "auth/network-request-failed": "Sin conexión a internet."
+      };
+      renderAuth(map[err.code] || "No fue posible iniciar sesión. Intenta de nuevo.");
+    }
+  };
+  el("lgForgot").onclick = async () => {
+    const email = el("lgEmail").value.trim();
+    if (!email) return toast("Escribe tu correo primero");
+    try { await sendPasswordResetEmail(auth, email); renderAuth("Te enviamos un correo para restablecer tu contraseña.", "ok"); }
+    catch { toast("No pudimos enviar el correo"); }
+  };
+}
+
+/* Documento de cuenta en Firestore */
+async function loadAccount(u) {
+  const ref = doc(db, "users", u.uid);
+  let snap = await getDoc(ref);
+  if (!snap.exists()) {
+    const isAdmin = u.email === ADMIN_EMAIL;
+    const base = {
+      email: u.email, role: isAdmin ? "admin" : "user", active: true,
+      createdAt: serverTimestamp(), createdBy: "self",
+      expiresAt: null, profiles: [{ id: "p1", name: u.email.split("@")[0].slice(0, 14), avatar: AVATARS[0] }]
+    };
+    await setDoc(ref, base);
+    snap = await getDoc(ref);
+  }
+  const data = snap.data();
+  if (!data.profiles?.length) {
+    data.profiles = [{ id: "p1", name: "Perfil 1", avatar: AVATARS[0] }];
+    await updateDoc(ref, { profiles: data.profiles });
+  }
+  S.account = { id: u.uid, ...data };
+  S.role = data.role || "user";
+  return S.account;
+}
+
+onAuthStateChanged(auth, async u => {
+  await ensureDeviceChoice();
+  el("splash").style.opacity = 0;
+  setTimeout(() => el("splash").classList.add("hide"), 600);
+  S.unsub.forEach(f => { try { f(); } catch (e) {} }); S.unsub = [];
+  clearInterval(S.deviceHeartbeat);
+  if (!u) {
+    S.user = null; S.account = null; S.role = null; S.profile = null;
+    el("app").classList.add("hide"); el("profiles").classList.add("hide");
+    return renderAuth();
+  }
+  S.user = u;
+  try { await loadAccount(u); }
+  catch (e) { console.error(e); return renderAuth("No pudimos cargar tu cuenta. Revisa tu conexión."); }
+
+  if (S.account.active === false) { await signOut(auth); return renderAuth("Tu cuenta está desactivada. Contacta a tu distribuidor."); }
+  const exp = S.account.expiresAt?.toDate ? S.account.expiresAt.toDate() : (S.account.expiresAt ? new Date(S.account.expiresAt) : null);
+  if (exp && exp < new Date() && S.role === "user") { await signOut(auth); return renderAuth("Tu suscripción venció. Renueva con tu distribuidor."); }
+
+  await finishLoginFlow();
+});
+
+async function finishLoginFlow() {
+  /* El límite de dispositivos solo aplica a cuentas de cliente (role "user"),
+     no a admin ni vendedores, que necesitan poder entrar desde cualquier equipo. */
+  if (S.role === "user") {
+    const ok = await checkDeviceLimit();
+    if (!ok) return; /* ya se mostró la pantalla de "límite de dispositivos" */
+  }
+  el("auth").classList.add("hide");
+  await loadSettings();
+  subscribeContent();
+  if (S.role === "user") renderProfiles();
+  else { S.profile = { id: "admin", name: S.role === "admin" ? "Panel" : "Ventas", avatar: AVATARS[0] }; startApp(); }
+}
+
+/* ============================================================
+   LÍMITE DE DISPOSITIVOS CONECTADOS POR CUENTA (máx. 4)
+   ============================================================
+   Cada dispositivo se identifica con un id local persistente (localStorage).
+   La cuenta guarda en Firestore la lista de dispositivos con su última
+   actividad; un dispositivo sin actividad por más de DEVICE_STALE_MS se
+   considera libre automáticamente. Mientras la app sigue abierta, se manda
+   un "heartbeat" periódico para mantener el dispositivo como activo. */
+function getDeviceId() {
+  let id = localStorage.getItem("utv_device_id");
+  if (!id) { id = "d_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); localStorage.setItem("utv_device_id", id); }
+  return id;
+}
+function getDeviceName() {
+  const ua = navigator.userAgent || "";
+  if (S.isTV) return "Android TV";
+  if (/ipad/i.test(ua)) return "iPad";
+  if (/iphone/i.test(ua)) return "iPhone";
+  if (/android/i.test(ua)) return "Android";
+  if (/mac os/i.test(ua)) return "Mac";
+  if (/windows/i.test(ua)) return "Windows";
+  return "Dispositivo";
+}
+async function checkDeviceLimit() {
+  const myId = getDeviceId();
+  const now = Date.now();
+  let devices = (S.account.devices || []).filter(d => now - (d.lastActive || 0) < DEVICE_STALE_MS);
+  const mine = devices.find(d => d.id === myId);
+  if (!mine && devices.length >= MAX_DEVICES) {
+    renderDeviceLimit(devices);
+    return false;
+  }
+  if (mine) mine.lastActive = now, mine.name = getDeviceName();
+  else devices.push({ id: myId, name: getDeviceName(), lastActive: now });
+  S.account.devices = devices;
+  await updateDoc(doc(db, "users", S.user.uid), { devices }).catch(() => {});
+  startDeviceHeartbeat();
+  return true;
+}
+function startDeviceHeartbeat() {
+  clearInterval(S.deviceHeartbeat);
+  S.deviceHeartbeat = setInterval(async () => {
+    if (!S.user || S.role !== "user") return;
+    const myId = getDeviceId();
+    const devices = (S.account.devices || []).filter(d => d.id !== myId);
+    devices.push({ id: myId, name: getDeviceName(), lastActive: Date.now() });
+    S.account.devices = devices;
+    await updateDoc(doc(db, "users", S.user.uid), { devices }).catch(() => {});
+  }, 5 * 60 * 1000);
+}
+function renderDeviceLimit(devices) {
+  const a = el("auth");
+  a.style.setProperty("--auth-bg", `url('${BANNER}')`);
+  a.classList.remove("hide");
+  el("profiles").classList.add("hide"); el("app").classList.add("hide");
+  a.innerHTML = `
+    <div class="auth-card" style="max-width:460px">
+      <img class="logo" src="${LOGO}" alt="Ultra TV" />
+      <h1>Límite de dispositivos</h1>
+      <p class="sub">Esta cuenta ya tiene ${MAX_DEVICES} dispositivos conectados. Quita uno para continuar aquí, o pide a tu distribuidor que lo libere.</p>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px">
+        ${devices.map(d => `<div style="display:flex;align-items:center;gap:10px;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:10px 12px">
+          <div style="flex:1"><div style="font-weight:700;font-size:14px">${esc(d.name || "Dispositivo")}</div>
+          <div style="font-size:11.5px;color:var(--fg-dim)">Últ. actividad: ${new Date(d.lastActive).toLocaleString("es-MX")}</div></div>
+          <button class="btn btn-line mini" data-rmdev="${esc(d.id)}">Quitar</button>
+        </div>`).join("")}
+      </div>
+      <button class="btn btn-brand btn-w" id="dlRetry">Reintentar</button>
+      <button class="btn btn-line btn-w" id="dlOut" style="margin-top:10px">Cerrar sesión</button>
+    </div>`;
+  a.querySelectorAll("[data-rmdev]").forEach(x => x.onclick = async () => {
+    const left = devices.filter(d => d.id !== x.dataset.rmdev);
+    await updateDoc(doc(db, "users", S.user.uid), { devices: left }).catch(() => {});
+    S.account.devices = left;
+    toast("Dispositivo eliminado");
+    finishLoginFlow();
+  });
+  el("dlRetry").onclick = () => finishLoginFlow();
+  el("dlOut").onclick = () => signOut(auth);
+}
+function manageDevicesModal() {
+  const myId = getDeviceId();
+  const devices = S.account.devices || [];
+  el("modal").innerHTML = `<div class="overlay"><div class="sheet" style="max-width:480px"><div class="bd">
+    <h2 style="margin:0 0 6px;font-size:21px">Mis dispositivos</h2>
+    <p class="note" style="text-align:left;margin:0 0 16px">Esta cuenta permite hasta ${MAX_DEVICES} dispositivos conectados a la vez.</p>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      ${devices.length ? devices.map(d => `<div style="display:flex;align-items:center;gap:10px;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:10px 12px">
+        <div style="flex:1"><div style="font-weight:700;font-size:14px">${esc(d.name || "Dispositivo")}${d.id === myId ? " · Este dispositivo" : ""}</div>
+        <div style="font-size:11.5px;color:var(--fg-dim)">Últ. actividad: ${new Date(d.lastActive).toLocaleString("es-MX")}</div></div>
+        <button class="btn btn-line mini" data-rmdev2="${esc(d.id)}">Quitar</button>
+      </div>`).join("") : `<p class="note" style="text-align:left">Sin dispositivos registrados.</p>`}
+    </div>
+    <button class="btn btn-line btn-w" id="dvClose" style="margin-top:16px">Cerrar</button>
+  </div></div></div>`;
+  el("modal").querySelectorAll("[data-rmdev2]").forEach(x => x.onclick = async () => {
+    const left = devices.filter(d => d.id !== x.dataset.rmdev2);
+    await updateDoc(doc(db, "users", S.user.uid), { devices: left }).catch(() => {});
+    S.account.devices = left;
+    toast("Dispositivo eliminado");
+    manageDevicesModal();
+  });
+  el("dvClose").onclick = () => { el("modal").innerHTML = ""; };
+}
+
+/* ============================================================
+   PERFILES (máx. 4 por cuenta)
+   ============================================================ */
+function renderProfiles() {
+  const p = el("profiles");
+  p.classList.remove("hide");
+  el("app").classList.add("hide");
+  const list = S.account.profiles || [];
+  p.innerHTML = `
+    <img src="${LOGO}" style="width:170px;margin-bottom:28px" alt="Ultra TV" />
+    <h2>¿Quién está viendo?</h2>
+    <div class="p-grid">
+      ${list.map((x, i) => `
+        <button class="p-item" data-i="${i}" style="animation-delay:${i * .05}s">
+          <img src="${x.avatar}" alt="${esc(x.name)}" /><span>${esc(x.name)}</span>
+        </button>`).join("")}
+      ${list.length < 4 ? `<button class="p-item" id="addProf"><div class="p-add">+</div><span>Agregar perfil</span></button>` : ""}
+    </div>
+    <div style="display:flex;gap:12px;margin-top:34px">
+      <button class="btn btn-line" id="mgProf">Administrar perfiles</button>
+      <button class="btn btn-line" id="pfOut">Cerrar sesión</button>
+    </div>`;
+  p.querySelectorAll(".p-item[data-i]").forEach(b => b.onclick = () => {
+    S.profile = list[+b.dataset.i];
+    localStorage.setItem("utv_profile", S.profile.id);
+    p.classList.add("hide"); startApp();
+  });
+  if (el("addProf")) el("addProf").onclick = () => profileEditor(null);
+  el("mgProf").onclick = () => profileEditor("manage");
+  el("pfOut").onclick = () => signOut(auth);
+  setTimeout(() => p.querySelector(".p-item")?.focus(), 120);
+}
+
+function profileEditor(mode, idx = null) {
+  const list = S.account.profiles || [];
+  const editing = idx !== null ? list[idx] : null;
+  if (mode === "manage") {
+    el("modal").innerHTML = `<div class="overlay"><div class="sheet" style="max-width:520px"><div class="bd">
+      <h2 style="margin:0 0 18px;font-size:22px">Administrar perfiles</h2>
+      ${list.map((x, i) => `<div style="display:flex;gap:12px;align-items:center;margin-bottom:12px">
+        <img src="${x.avatar}" style="width:52px;height:52px;border-radius:10px;object-fit:cover" alt="" />
+        <div style="flex:1;font-weight:600">${esc(x.name)}</div>
+        <button class="btn btn-line mini" data-ed="${i}">Editar</button>
+        ${list.length > 1 ? `<button class="btn btn-line mini" data-del="${i}">Eliminar</button>` : ""}
+      </div>`).join("")}
+      <button class="btn btn-brand btn-w" id="mDone" style="margin-top:12px">Listo</button>
+    </div></div></div>`;
+    el("mDone").onclick = () => { el("modal").innerHTML = ""; renderProfiles(); };
+    el("modal").querySelectorAll("[data-ed]").forEach(b => b.onclick = () => profileEditor("edit", +b.dataset.ed));
+    el("modal").querySelectorAll("[data-del]").forEach(b => b.onclick = async () => {
+      list.splice(+b.dataset.del, 1);
+      await updateDoc(doc(db, "users", S.user.uid), { profiles: list });
+      profileEditor("manage");
+    });
+    return;
+  }
+  el("modal").innerHTML = `<div class="overlay"><div class="sheet" style="max-width:480px"><div class="bd">
+    <h2 style="margin:0 0 18px;font-size:22px">${editing ? "Editar perfil" : "Nuevo perfil"}</h2>
+    <div class="field"><label>Nombre</label><input class="inp" id="pfName" maxlength="16" value="${esc(editing?.name || "")}" placeholder="Ej. Familia" /></div>
+    <label style="font-size:12px;color:var(--fg-dim);text-transform:uppercase;letter-spacing:.1em;font-weight:600">Avatar</label>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin:10px 0 20px">
+      ${AVATARS.map(a => `<button class="avSel" data-a="${a}" style="border-radius:12px;padding:0">
+        <img src="${a}" style="width:66px;height:66px;border-radius:12px;object-fit:cover;border:3px solid ${editing?.avatar === a ? "var(--brand)" : "transparent"}" alt="" /></button>`).join("")}
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-brand" style="flex:1" id="pfSave">Guardar</button>
+      <button class="btn btn-line" id="pfCancel">Cancelar</button>
+    </div>
+  </div></div></div>`;
+  let avatar = editing?.avatar || AVATARS[0];
+  el("modal").querySelectorAll(".avSel").forEach(b => b.onclick = () => {
+    avatar = b.dataset.a;
+    el("modal").querySelectorAll(".avSel img").forEach(i => i.style.borderColor = "transparent");
+    b.querySelector("img").style.borderColor = "var(--brand)";
+  });
+  el("pfCancel").onclick = () => { el("modal").innerHTML = ""; renderProfiles(); };
+  el("pfSave").onclick = async () => {
+    const name = el("pfName").value.trim() || "Perfil";
+    if (editing) list[idx] = { ...editing, name, avatar };
+    else list.push({ id: "p" + Date.now(), name, avatar });
+    await updateDoc(doc(db, "users", S.user.uid), { profiles: list });
+    S.account.profiles = list;
+    el("modal").innerHTML = ""; renderProfiles();
+  };
+}
+
+/* ============================================================
+   CONFIGURACIÓN + CONTENIDO (Firestore en tiempo real)
+   ============================================================ */
+async function loadSettings() {
+  try {
+    const s = await getDoc(doc(db, "settings", "app"));
+    S.settings = s.exists() ? { heroEnabled: true, ...s.data() } : { heroEnabled: true };
+  } catch { S.settings = { heroEnabled: true }; }
+}
+function subscribeContent() {
+  try {
+    const un = onSnapshot(collection(db, "content"), snap => {
+      S.content = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      if (!el("app").classList.contains("hide") && ["inicio","peliculas","series","milista"].includes(S.page)) route(S.page, true);
+    }, err => console.warn("content", err));
+    S.unsub.push(un);
+  } catch (e) { console.warn(e); }
+}
+
+/* Progreso local + Firestore */
+const progKey = () => `utv_prog_${S.user?.uid}_${S.profile?.id}`;
+const listKey = () => `utv_list_${S.user?.uid}_${S.profile?.id}`;
+const readLS = k => { try { return JSON.parse(localStorage.getItem(k) || "{}"); } catch { return {}; } };
+const writeLS = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+function saveProgress(itemId, data) {
+  const p = readLS(progKey()); p[itemId] = { ...(p[itemId] || {}), ...data, at: Date.now() }; writeLS(progKey(), p);
+  if (S.user && S.profile) setDoc(doc(db, "users", S.user.uid, "progress", `${S.profile.id}_${itemId}`),
+    { itemId, profileId: S.profile.id, ...data, at: serverTimestamp() }, { merge: true }).catch(()=>{});
+}
+const getProgress = id => readLS(progKey())[id] || null;
+function toggleList(id) {
+  const l = readLS(listKey()); l[id] = !l[id]; writeLS(listKey(), l);
+  if (S.user && S.profile) setDoc(doc(db, "users", S.user.uid, "mylist", `${S.profile.id}_${id}`),
+    { itemId: id, profileId: S.profile.id, active: !!l[id] }, { merge: true }).catch(()=>{});
+  toast(l[id] ? "Agregado a Mi Lista" : "Quitado de Mi Lista");
+  return l[id];
+}
+const inList = id => !!readLS(listKey())[id];
+
+/* ============================================================
+   APP SHELL
+   ============================================================ */
+function startApp() {
+  el("app").classList.remove("hide");
+  el("hdrAvatar").src = S.profile?.avatar || AVATARS[0];
+  const tabs = S.role === "admin"
+    ? [["inicio","Inicio"],["peliculas","Películas"],["series","Series"],["milista","Mi Lista"],["panel","Panel"]]
+    : S.role === "seller"
+      ? [["inicio","Inicio"],["peliculas","Películas"],["series","Series"],["ventas","Mis clientes"]]
+      : [["inicio","Inicio"],["peliculas","Películas"],["series","Series"],["milista","Mi Lista"]];
+  el("nav").innerHTML = tabs.map(([k, t]) => `<button data-p="${k}">${t}</button>`).join("");
+  el("nav").querySelectorAll("button").forEach(b => b.onclick = () => route(b.dataset.p));
+  el("btnSearch").onclick = openSearch;
+  el("btnAvatar").onclick = openMenu;
+  window.addEventListener("scroll", () => el("hdr").classList.toggle("solid", window.scrollY > 40));
+  route("inicio");
+  track("app_open", { role: S.role, device: S.isTV ? "tv" : "mobile" });
+}
+
+function openMenu() {
+  if (document.querySelector(".menu-pop")) return document.querySelector(".menu-pop").remove();
+  const m = document.createElement("div");
+  m.className = "menu-pop";
+  m.innerHTML = `
+    <div style="display:flex;gap:10px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line);margin-bottom:6px">
+      <img src="${S.profile?.avatar}" style="width:36px;height:36px;border-radius:9px;object-fit:cover" alt="" />
+      <div><div style="font-weight:700;font-size:14px">${esc(S.profile?.name || "")}</div>
+      <div style="font-size:11.5px;color:var(--fg-dim)">${esc(S.user?.email || "")}</div></div>
+    </div>
+    ${S.role === "user" ? `<button data-a="switch">${ic("users")} Cambiar perfil</button><button data-a="edit">${ic("edit")} Editar perfil</button>` : ""}
+    ${S.role === "user" ? `<button data-a="list">${ic("plus")} Mi Lista</button>` : ""}
+    ${S.role === "user" ? `<button data-a="devices">${ic("expand")} Mis dispositivos (${(S.account.devices || []).length}/${MAX_DEVICES})</button>` : ""}
+    <button data-a="devmode">${ic("expand")} ${S.isTV ? "Modo Celular/PC" : "Modo Televisor"}</button>
+    <button data-a="out">${ic("logout")} Cerrar sesión</button>`;
+  document.body.appendChild(m);
+  m.querySelectorAll("button").forEach(b => b.onclick = () => {
+    const a = b.dataset.a; m.remove();
+    if (a === "switch") { el("app").classList.add("hide"); renderProfiles(); }
+    if (a === "edit") profileEditor("manage");
+    if (a === "list") route("milista");
+    if (a === "devices") manageDevicesModal();
+    if (a === "devmode") setDeviceMode(S.isTV ? "mobile" : "tv");
+    if (a === "out") signOut(auth);
+  });
+  setTimeout(() => document.addEventListener("click", function h(e) {
+    if (!m.contains(e.target)) { m.remove(); document.removeEventListener("click", h); }
+  }), 10);
+}
+
+function route(page, silent) {
+  S.page = page;
+  el("nav").querySelectorAll("button").forEach(b => b.classList.toggle("active", b.dataset.p === page));
+  if (!silent) window.scrollTo({ top: 0 });
+  clearInterval(S.heroTimer);
+  const v = el("view");
+  if (page === "inicio") return renderHome(v);
+  if (page === "peliculas") return renderCatalog(v, "movie", "Películas");
+  if (page === "series") return renderCatalog(v, "tv", "Series");
+  if (page === "milista") return renderMyList(v);
+  if (page === "panel") return renderAdmin(v);
+  if (page === "ventas") return renderSeller(v);
+}
+
+/* ---------- Tarjetas y filas ---------- */
+function cardHTML(it, wide) {
+  const pr = getProgress(it.id);
+  const pct = pr && pr.duration ? Math.min(100, pr.position / pr.duration * 100) : 0;
+  const img = wide ? (IMG(it.backdrop, "w780") || IMG(it.poster, "w500") || PH) : (IMG(it.poster, "w500") || IMG(it.backdrop, "w780") || PH);
+  return `<button class="card ${wide ? "wide" : ""}" data-id="${it.id}" tabindex="0">
+    <img loading="lazy" src="${img}" alt="${esc(it.title)}" onerror="this.src='${PH}'" />
+    ${it.quality ? `<span class="badge">${esc(it.quality)}</span>` : ""}
+    <span class="lbl">${esc(it.title)}</span>
+    ${pct > 2 ? `<span class="prog" style="width:${pct}%"></span>` : ""}
+  </button>`;
+}
+function rowHTML(title, items, wide) {
+  if (!items.length) return "";
+  return `<section class="row"><h3>${esc(title)}</h3><div class="strip">${items.map(i => cardHTML(i, wide)).join("")}</div></section>`;
+}
+function bindCards(scope) {
+  scope.querySelectorAll(".card[data-id]").forEach(c => c.onclick = () => openDetail(c.dataset.id));
+}
+
+/* ---------- INICIO ---------- */
+function renderHome(v) {
+  const C = S.content.filter(x => x.type !== "iptv");
+  const featured = C.filter(x => x.featured);
+  const heroItems = (S.settings.heroEnabled !== false ? (featured.length ? featured : C.slice(0, 5)) : []);
+  const byGenre = g => C.filter(x => (x.genres || []).some(n => n.toLowerCase().includes(g.toLowerCase()))).slice(0, 20);
+  const cont = Object.entries(readLS(progKey()))
+    .sort((a, b) => b[1].at - a[1].at)
+    .map(([id, p]) => ({ ...C.find(x => x.id === id), _p: p }))
+    .filter(x => x.id && (!x._p.duration || x._p.position / x._p.duration < .95)).slice(0, 15);
+  const mylist = C.filter(x => inList(x.id));
+
+  if (!C.length) {
+    v.innerHTML = `<div class="page" style="text-align:center;padding-top:140px">
+      <img src="${LOGO}" style="width:200px;margin:0 auto 24px" alt="Ultra TV" />
+      <h2>Tu catálogo está por comenzar</h2>
+      <p class="lead">${S.role === "admin" ? "Agrega tu primer título desde el Panel → Contenido." : "Muy pronto tendrás nuevos estrenos disponibles."}</p>
+      ${S.role === "admin" ? `<button class="btn btn-brand" onclick="document.querySelector('[data-p=panel]').click()">Ir al Panel</button>` : ""}
+    </div>`;
+    return;
+  }
+  v.innerHTML = `
+    ${heroItems.length ? heroHTML(heroItems) : `<div style="height:90px"></div>`}
+    <div class="rows">
+      ${rowHTML("Continuar viendo", cont, true)}
+      ${rowHTML("Tendencias", [...C].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 20))}
+      ${rowHTML("Estrenos", [...C].sort((a, b) => (b.year || 0) - (a.year || 0)).slice(0, 20))}
+      ${rowHTML("Películas", C.filter(x => x.type === "movie").slice(0, 20))}
+      ${rowHTML("Series", C.filter(x => x.type === "tv").slice(0, 20))}
+      ${GENRES.map(g => rowHTML(g, byGenre(g))).join("")}
+      ${rowHTML("Mi Lista", mylist)}
+    </div>`;
+  bindCards(v);
+  if (heroItems.length) initHero(heroItems);
+}
+
+function heroHTML(items) {
+  return `<section id="hero">
+    <div class="bgs">${items.map((x, i) => `<img class="${i === 0 ? "on" : ""}" data-h="${i}" src="${IMG(x.backdrop, "original") || IMG(x.poster, "w780") || BANNER}" alt="" onerror="this.src='${BANNER}'" />`).join("")}</div>
+    <div class="shade"></div><div class="shade2"></div>
+    <div class="hero-in" id="heroIn"></div>
+    <div class="hero-dots" id="heroDots">${items.map((_, i) => `<i data-d="${i}" class="${i === 0 ? "on" : ""}"></i>`).join("")}</div>
+  </section>`;
+}
+function initHero(items) {
+  const paint = i => {
+    S.heroIdx = i;
+    const x = items[i];
+    document.querySelectorAll("#hero .bgs img").forEach(im => im.classList.toggle("on", +im.dataset.h === i));
+    document.querySelectorAll("#heroDots i").forEach(d => d.classList.toggle("on", +d.dataset.d === i));
+    el("heroIn").innerHTML = `
+      ${x.logo ? `<img class="hero-logo" src="${IMG(x.logo, "w500")}" alt="${esc(x.title)}" onerror="this.remove()" />`
+               : `<h1 class="hero-title">${esc(x.title)}</h1>`}
+      <div class="hero-meta">
+        ${x.quality ? `<span class="tag q">${esc(x.quality)}</span>` : ""}
+        ${x.year ? `<span>${esc(x.year)}</span>` : ""}
+        <span class="tag">${x.type === "tv" ? "SERIE" : "PELÍCULA"}</span>
+        ${(x.genres || []).slice(0, 3).map(g => `<span>${esc(g)}</span>`).join("<span>·</span>")}
+      </div>
+      <p class="hero-ov">${esc(x.overview || "")}</p>
+      <div class="hero-btns">
+        <button class="btn btn-brand" id="hPlay">${ic("play")} Ver ahora</button>
+        <button class="btn btn-glass" id="hList">${inList(x.id) ? ic("check") + " En Mi Lista" : ic("plus") + " Mi Lista"}</button>
+        <button class="btn btn-glass" id="hInfo">ℹ Información</button>
+      </div>`;
+    el("hPlay").onclick = () => x.type === "tv" ? resumeSeries(x) : playItem(x);
+    el("hInfo").onclick = () => openDetail(x.id);
+    el("hList").onclick = e => { const on = toggleList(x.id); e.currentTarget.innerHTML = on ? ic("check") + " En Mi Lista" : ic("plus") + " Mi Lista"; };
+  };
+  paint(0);
+  document.querySelectorAll("#heroDots i").forEach(d => d.onclick = () => { paint(+d.dataset.d); restart(); });
+  const restart = () => { clearInterval(S.heroTimer); S.heroTimer = setInterval(() => paint((S.heroIdx + 1) % items.length), 6000); };
+  restart();
+}
+
+/* ---------- CATÁLOGO ---------- */
+function renderCatalog(v, type, title) {
+  const all = S.content.filter(x => x.type === type);
+  let g = "Todos";
+  const paint = () => {
+    const items = g === "Todos" ? all : all.filter(x => (x.genres || []).some(n => n.toLowerCase().includes(g.toLowerCase())));
+    el("catGrid").innerHTML = items.length ? items.map(i => cardHTML(i)).join("")
+      : `<p class="empty" style="grid-column:1/-1">Aún no hay títulos en esta categoría.</p>`;
+    bindCards(el("catGrid"));
+  };
+  v.innerHTML = `<div class="page">
+    <h2>${title}</h2><p class="lead">${all.length} títulos disponibles</p>
+    <div class="chips" id="catChips">${["Todos", ...GENRES].map(x => `<button class="chip ${x === "Todos" ? "on" : ""}" data-g="${x}">${x}</button>`).join("")}</div>
+    <div class="grid" id="catGrid"></div></div>`;
+  el("catChips").querySelectorAll(".chip").forEach(c => c.onclick = () => {
+    g = c.dataset.g;
+    el("catChips").querySelectorAll(".chip").forEach(o => o.classList.toggle("on", o === c));
+    paint();
+  });
+  paint();
+}
+function renderMyList(v) {
+  const items = S.content.filter(x => inList(x.id));
+  v.innerHTML = `<div class="page"><h2>Mi Lista</h2><p class="lead">${items.length} títulos guardados</p>
+    <div class="grid" id="mlGrid">${items.length ? items.map(i => cardHTML(i)).join("") : `<p class="empty" style="grid-column:1/-1">Todavía no guardas nada. Usa “+ Mi Lista” en cualquier título.</p>`}</div></div>`;
+  bindCards(v);
+}
+/* ---------- BÚSQUEDA ---------- */
+function openSearch() {
+  const box = document.createElement("div");
+  box.id = "searchbar";
+  box.innerHTML = `<input id="sq" placeholder="Buscar películas, series o canales…" autocomplete="off" />`;
+  document.body.appendChild(box);
+  const pageWrap = document.createElement("div");
+  el("view").prepend(pageWrap);
+  const input = el("sq"); input.focus();
+  const run = () => {
+    const q = input.value.trim().toLowerCase();
+    if (!q) { pageWrap.innerHTML = ""; return; }
+    const r = S.content.filter(x => x.title.toLowerCase().includes(q) || (x.genres || []).join(" ").toLowerCase().includes(q));
+    pageWrap.innerHTML = `<div class="page"><h2>Resultados para “${esc(input.value)}”</h2>
+      <p class="lead">${r.length} coincidencias</p>
+      <div class="grid">${r.map(i => cardHTML(i)).join("") || `<p class="empty" style="grid-column:1/-1">Sin resultados.</p>`}</div></div>`;
+    bindCards(pageWrap);
+  };
+  input.oninput = run;
+  const close = e => {
+    if (e.key === "Escape" || e.key === "Backspace" && !input.value) {
+      box.remove(); pageWrap.remove(); document.removeEventListener("keydown", close);
+    }
+  };
+  document.addEventListener("keydown", close);
+  box.onclick = e => { if (e.target === box) { box.remove(); pageWrap.remove(); } };
+}
+
+/* ============================================================
+   FICHA DE DETALLE
+   ============================================================ */
+async function openDetail(id) {
+  const it = S.content.find(x => x.id === id);
+  if (!it) return;
+  if (it.type === "iptv") return playItem(it);
+  track("select_content", { content_type: it.type, item_id: id });
+  const m = el("modal");
+  m.innerHTML = `<div class="overlay" id="ovl"><div class="sheet">
+    <button class="close-x" id="cx">${ic("close")}</button>
+    <div class="hd"><img src="${IMG(it.backdrop, "original") || IMG(it.poster, "w780") || BANNER}" alt="" onerror="this.src='${BANNER}'" />
+      <div class="fade"></div>
+      <div class="info">
+        ${it.logo ? `<img class="lg" src="${IMG(it.logo, "w500")}" alt="" onerror="this.remove()" />` : `<h2>${esc(it.title)}</h2>`}
+      </div></div>
+    <div class="bd">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+        <button class="btn btn-brand" id="dPlay">${ic("play")} ${it.type === "tv" ? "Reproducir" : "Ver ahora"}</button>
+        <button class="btn btn-line" id="dList">${inList(it.id) ? ic("check") + " En Mi Lista" : ic("plus") + " Mi Lista"}</button>
+        ${it.trailer ? `<button class="btn btn-line" id="dTrail">${ic("film")} Tráiler</button>` : ""}
+      </div>
+      <div class="kv">
+        ${it.year ? `<span><b>${esc(it.year)}</b></span>` : ""}
+        ${it.quality ? `<span><b>${esc(it.quality)}</b></span>` : ""}
+        ${it.rating ? `<span>${ic("star")} <b>${Number(it.rating).toFixed(1)}</b></span>` : ""}
+        ${it.genres?.length ? `<span>${esc(it.genres.join(" · "))}</span>` : ""}
+        ${it.director ? `<span>Dirección: <b>${esc(it.director)}</b></span>` : ""}
+      </div>
+      <p class="ov">${esc(it.overview || "Sin sinopsis disponible.")}</p>
+      ${it.cast?.length ? `<div class="sec-t">Reparto</div><div class="cast">${it.cast.slice(0, 14).map(c => `
+        <div><img loading="lazy" src="${IMG(c.photo, "w185") || PH}" alt="" onerror="this.src='${PH}'" />${esc(c.name)}</div>`).join("")}</div>` : ""}
+      ${it.type === "tv" ? `<div id="seasonsBox"></div>` : ""}
+    </div></div></div>`;
+  const close = () => m.innerHTML = "";
+  el("cx").onclick = close;
+  el("ovl").onclick = e => { if (e.target.id === "ovl") close(); };
+  el("dList").onclick = e => { const on = toggleList(it.id); e.currentTarget.innerHTML = on ? ic("check") + " En Mi Lista" : ic("plus") + " Mi Lista"; };
+  el("dPlay").onclick = () => it.type === "tv" ? resumeSeries(it) : playItem(it);
+  if (it.trailer && el("dTrail")) el("dTrail").onclick = () => window.open(it.trailer, "_blank");
+  if (it.type === "tv") renderSeasons(it);
+  setTimeout(() => el("dPlay")?.focus(), 100);
+}
+
+function renderSeasons(it) {
+  const box = el("seasonsBox");
+  const seasons = (it.seasons || []).slice().sort((a, b) => a.number - b.number);
+  if (!seasons.length) { box.innerHTML = `<div class="sec-t">Episodios</div><p class="empty" style="padding:0">Aún no hay temporadas cargadas.</p>`; return; }
+  const pr = getProgress(it.id);
+  let cur = seasons.findIndex(s => s.number === pr?.season);
+  if (cur < 0) cur = 0;
+  const paint = () => {
+    const s = seasons[cur];
+    box.innerHTML = `<div class="sec-t" style="display:flex;align-items:center;gap:14px">Episodios
+      <select class="inp" id="selSea" style="width:auto;padding:8px 12px">${seasons.map((x, i) => `<option value="${i}" ${i === cur ? "selected" : ""}>Temporada ${x.number}</option>`).join("")}</select></div>
+      <div class="eps">${(s.episodes || []).map((e, i) => {
+        const done = pr && pr.season === s.number && pr.episode === e.number;
+        return `<button class="ep" data-e="${i}" tabindex="0">
+          <img loading="lazy" src="${IMG(e.still, "w300") || IMG(it.backdrop, "w300") || PH}" alt="" onerror="this.src='${PH}'" />
+          <div><div class="t">${e.number}. ${esc(e.title || "Episodio " + e.number)} ${done ? '<span class="pill ok" style="margin-left:6px">Continuar</span>' : ""}</div>
+          <div class="d">${esc(e.overview || "")}</div></div></button>`;
+      }).join("") || `<p class="empty" style="padding:0">Sin episodios en esta temporada.</p>`}</div>`;
+    el("selSea").onchange = e => { cur = +e.target.value; paint(); };
+    box.querySelectorAll(".ep").forEach(b => b.onclick = () => playEpisode(it, s, s.episodes[+b.dataset.e]));
+  };
+  paint();
+}
+function resumeSeries(it) {
+  const pr = getProgress(it.id);
+  const seasons = (it.seasons || []).slice().sort((a, b) => a.number - b.number);
+  if (!seasons.length) return openDetail(it.id);
+  let s = seasons.find(x => x.number === pr?.season) || seasons[0];
+  let e = (s.episodes || []).find(x => x.number === pr?.episode) || (s.episodes || [])[0];
+  if (!e) return openDetail(it.id);
+  playEpisode(it, s, e);
+}
+
+/* ============================================================
+   REPRODUCTOR — MP4 / MKV / HLS / DASH
+   ============================================================ */
+let hls = null, dashP = null, uiTimer = null, curCtx = null, ytPlayer = null, ytPoll = null, ytPending = null, vmPlayer = null;
+
+/* --- YouTube helpers --- */
+function getYouTubeId(url) {
+  if (!url) return null;
+  const m = String(url).match(/(?:youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+/* --- Vimeo helpers: detecta el video y evita cargar la página completa --- */
+function getVimeoId(url) {
+  if (!url) return null;
+  const m = String(url).match(/vimeo\.com\/(?:video\/|channels\/[\w-]+\/|groups\/[\w-]+\/videos\/|showcase\/\d+\/video\/)?(\d{5,})(?:\/([0-9a-f]+))?/i);
+  return m ? { id: m[1], hash: m[2] || null } : null;
+}
+function loadVimeoApi() {
+  if (window.Vimeo && window.Vimeo.Player) return Promise.resolve();
+  return new Promise((res, rej) => {
+    if (document.getElementById("vimeoApi")) {
+      const wait = () => window.Vimeo && window.Vimeo.Player ? res() : setTimeout(wait, 60);
+      wait(); return;
+    }
+    const s = document.createElement("script");
+    s.id = "vimeoApi"; s.src = "https://player.vimeo.com/api/player.js";
+    s.onload = res; s.onerror = rej;
+    document.head.appendChild(s);
+  });
+}
+/* Acepta tanto una URL directa como un código <iframe ...> pegado (ok.ru, vk, etc.) y devuelve el src real */
+function resolveEmbedSrc(input) {
+  if (!input) return input;
+  let src = String(input).trim();
+  const m = src.match(/<iframe[^>]*\ssrc=["']([^"']+)["']/i);
+  if (m) src = m[1];
+  if (src.startsWith("//")) src = "https:" + src;
+  return src.trim();
+}
+function isDirectVideoUrl(url) {
+  const clean = url.split("?")[0].split("#")[0];
+  const ext = (clean.split(".").pop() || "").toLowerCase();
+  return ["mp4", "webm", "ogg", "ogv", "mov", "mkv", "m3u8", "m3u", "mpd", "ts"].includes(ext) || url.includes(".m3u8");
+}
+function loadYTApi() {
+  if (window.YT && window.YT.Player) return Promise.resolve();
+  return new Promise(res => {
+    const prev = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => { prev && prev(); res(); };
+    if (!document.getElementById("ytIframeApi")) {
+      const s = document.createElement("script");
+      s.id = "ytIframeApi"; s.src = "https://www.youtube.com/iframe_api";
+      document.head.appendChild(s);
+    }
+  });
+}
+function playItem(it) {
+  const url = it.url || it.sources?.[0]?.url;
+  if (!url) return toast("Este título aún no tiene fuente de video");
+  openPlayer({ item: it, title: it.title, url, sources: it.sources || [], startAt: getProgress(it.id)?.position || 0,
+    save: pos => saveProgress(it.id, { position: pos.position, duration: pos.duration, title: it.title }) });
+}
+function playEpisode(it, season, ep) {
+  if (!ep?.url) return toast("Este episodio aún no tiene fuente de video");
+  el("modal").innerHTML = "";
+  const seasons = (it.seasons || []).slice().sort((a, b) => a.number - b.number);
+  const idx = season.episodes.indexOf(ep);
+  const next = season.episodes[idx + 1]
+    || (seasons[seasons.indexOf(season) + 1]?.episodes || [])[0];
+  const nextSeason = season.episodes[idx + 1] ? season : seasons[seasons.indexOf(season) + 1];
+  openPlayer({
+    item: it, title: `${it.title} · T${season.number}:E${ep.number} — ${ep.title || ""}`,
+    url: ep.url, sources: ep.sources || [], startAt: (getProgress(it.id)?.episode === ep.number ? getProgress(it.id).position : 0),
+    save: p => saveProgress(it.id, { position: p.position, duration: p.duration, season: season.number, episode: ep.number, title: it.title }),
+    next: next ? { label: `T${nextSeason.number}:E${next.number} ${next.title || ""}`, go: () => playEpisode(it, nextSeason, next) } : null
+  });
+}
+
+function openPlayer(ctx) {
+  curCtx = ctx;
+  const p = el("player");
+  p.classList.remove("hide");
+  const srcs = ctx.sources?.length ? ctx.sources : [{ label: "Automática", url: ctx.url }];
+  p.innerHTML = `
+    <video id="vid" playsinline crossorigin="anonymous" preload="metadata"></video>
+    <div id="ytHolder" class="hide" style="position:absolute;inset:0;background:#000"></div>
+    <div id="vmHolder" class="hide" style="position:absolute;inset:0;background:#000"></div>
+    <div id="embedHolder" class="hide" style="position:absolute;inset:0;background:#000"></div>
+    <div class="pl-ui" id="plui">
+      <div class="pl-top">
+        <button class="icon-btn" id="plBack" tabindex="0">${ic("chevronL")}</button>
+        <div class="ttl">${esc(ctx.title)}</div>
+      </div>
+      <div class="pl-bot">
+        <div class="bar" id="plBar"><i id="plFill"></i><b id="plDot"></b></div>
+        <div class="pl-ctrls">
+          <button class="btn btn-glass" id="plPlay" tabindex="0">${ic("play")}</button>
+          <button class="btn btn-glass" id="plBack10" tabindex="0">${ic("rewind10")} 10</button>
+          <button class="btn btn-glass" id="plFwd10" tabindex="0">10 ${ic("forward10")}</button>
+          <span class="t" id="plTime">0:00 / 0:00</span>
+          <span style="flex:1"></span>
+          <select id="plSrc" tabindex="0" title="Fuente">${srcs.map((s, i) => { const rs = resolveEmbedSrc(s.url); const kind = getYouTubeId(rs) ? "YouTube" : getVimeoId(rs) ? "Vimeo" : isDirectVideoUrl(rs) ? "Fuente " + (i + 1) : "Embed"; return `<option value="${i}">${esc(s.label || kind)}</option>`; }).join("")}</select>
+          <select id="plQual" tabindex="0" class="hide" title="Resolución"></select>
+          <select id="plAudio" tabindex="0" class="hide" title="Audio"></select>
+          <select id="plSub" tabindex="0" class="hide" title="Subtítulos"></select>
+          <button class="btn btn-glass" id="plFull" tabindex="0">${ic("expand")}</button>
+        </div>
+      </div>
+    </div>`;
+  const v = el("vid");
+  const ytHolder = el("ytHolder");
+  const vmHolder = el("vmHolder");
+  const embedHolder = el("embedHolder");
+  let mode = "native"; // "native" | "yt" | "vimeo" | "embed"
+  let vmDur = 0, vmCur = 0, vmPausedFlag = true;
+
+  /* --- capa de abstracción: video nativo vs YouTube vs Vimeo vs iframe genérico --- */
+  const api = {
+    play: () => mode === "yt" ? ytPlayer?.playVideo() : mode === "vimeo" ? vmPlayer?.play().catch(()=>{}) : mode === "native" ? v.play().catch(()=>{}) : null,
+    pause: () => mode === "yt" ? ytPlayer?.pauseVideo() : mode === "vimeo" ? vmPlayer?.pause().catch(()=>{}) : mode === "native" ? v.pause() : null,
+    paused: () => mode === "yt" ? (ytPlayer?.getPlayerState ? ytPlayer.getPlayerState() !== 1 : true) : mode === "vimeo" ? vmPausedFlag : mode === "native" ? v.paused : true,
+    duration: () => mode === "yt" ? (ytPlayer?.getDuration ? ytPlayer.getDuration() : 0) : mode === "vimeo" ? vmDur : mode === "native" ? v.duration : 0,
+    currentTime: () => mode === "yt" ? (ytPlayer?.getCurrentTime ? ytPlayer.getCurrentTime() : 0) : mode === "vimeo" ? vmCur : mode === "native" ? v.currentTime : 0,
+    seek: t => mode === "yt" ? ytPlayer?.seekTo(t, true) : mode === "vimeo" ? vmPlayer?.setCurrentTime(t).catch(()=>{}) : mode === "native" ? (v.currentTime = t) : null
+  };
+  /* Oculta controles que no aplican a un iframe embebido de terceros (sin API de control) */
+  const setNativeCtrls = show => ["plBar", "plPlay", "plBack10", "plFwd10", "plTime"].forEach(id => el(id).classList.toggle("hide", !show));
+
+  const stopYT = () => {
+    clearInterval(ytPoll); ytPoll = null;
+    if (ytPlayer) { try { ytPlayer.destroy(); } catch (e) {} ytPlayer = null; }
+    ytHolder.classList.add("hide"); ytHolder.innerHTML = "";
+  };
+  const stopVimeo = () => {
+    if (vmPlayer) { try { vmPlayer.destroy(); } catch (e) {} vmPlayer = null; }
+    vmHolder.classList.add("hide"); vmHolder.innerHTML = "";
+  };
+  const stopEmbed = () => { embedHolder.classList.add("hide"); embedHolder.innerHTML = ""; };
+
+  const load = rawUrl => {
+    const url = resolveEmbedSrc(rawUrl);
+    if (hls) { hls.destroy(); hls = null; }
+    if (dashP) { dashP.reset(); dashP = null; }
+    el("plQual").classList.add("hide"); el("plAudio").classList.add("hide");
+    const ytId = getYouTubeId(url);
+    const vmId = !ytId ? getVimeoId(url) : null;
+    if (ytId) {
+      /* --- fuente de YouTube --- */
+      mode = "yt"; setNativeCtrls(true);
+      stopEmbed(); stopVimeo();
+      v.pause(); v.removeAttribute("src"); v.classList.add("hide");
+      ytHolder.classList.remove("hide");
+      loadYTApi().then(() => {
+        if (ytPlayer && ytPlayer.loadVideoById) { ytPlayer.loadVideoById(ytId); return; }
+        ytHolder.innerHTML = `<div id="ytInner" style="width:100%;height:100%"></div>`;
+        ytPlayer = new YT.Player("ytInner", {
+          videoId: ytId, width: "100%", height: "100%",
+          playerVars: { autoplay: 1, playsinline: 1, rel: 0, modestbranding: 1, controls: 0, disablekb: 1 },
+          events: {
+            onReady: e => {
+              e.target.playVideo();
+              if (ctx.startAt > 5 && ctx.startAt < (e.target.getDuration() - 20)) e.target.seekTo(ctx.startAt, true);
+            },
+            onStateChange: e => {
+              el("plPlay").innerHTML = e.data === 1 ? ic("pause") : ic("play");
+              if (e.data === 0) { ctx.next ? ctx.next.go() : closePlayer(); }
+            }
+          }
+        });
+        clearInterval(ytPoll);
+        ytPoll = setInterval(() => {
+          if (!ytPlayer || !ytPlayer.getDuration) return;
+          const dur = ytPlayer.getDuration() || 0, cur = ytPlayer.getCurrentTime() || 0;
+          updateProgressUI(cur, dur);
+        }, 500);
+      });
+    } else if (vmId) {
+      /* --- fuente de Vimeo: solo el video vía Vimeo Player SDK, nunca la página --- */
+      mode = "vimeo"; setNativeCtrls(true);
+      stopYT(); stopEmbed();
+      v.pause(); v.removeAttribute("src"); v.classList.add("hide");
+      vmHolder.classList.remove("hide");
+      loadVimeoApi().then(() => {
+        vmHolder.innerHTML = "";
+        vmDur = 0; vmCur = 0; vmPausedFlag = true;
+        vmPlayer = new Vimeo.Player(vmHolder, {
+          id: vmId.id, h: vmId.hash || undefined,
+          autoplay: true, playsinline: true, controls: false, responsive: true, dnt: true
+        });
+        vmPlayer.on("loaded", () => {
+          vmPlayer.getDuration().then(d => vmDur = d).catch(()=>{});
+          if (ctx.startAt > 5) vmPlayer.getDuration().then(d => { if (ctx.startAt < d - 20) vmPlayer.setCurrentTime(ctx.startAt).catch(()=>{}); }).catch(()=>{});
+        });
+        vmPlayer.on("timeupdate", data => { vmCur = data.seconds; vmDur = data.duration || vmDur; updateProgressUI(vmCur, vmDur); });
+        vmPlayer.on("play", () => { vmPausedFlag = false; el("plPlay").innerHTML = ic("pause"); });
+        vmPlayer.on("pause", () => { vmPausedFlag = true; el("plPlay").innerHTML = ic("play"); });
+        vmPlayer.on("ended", () => { ctx.next ? ctx.next.go() : closePlayer(); });
+      });
+    } else if (isDirectVideoUrl(url)) {
+      /* --- fuente de video normal (mp4/mkv/hls/dash) --- */
+      mode = "native"; setNativeCtrls(true);
+      stopYT(); stopVimeo(); stopEmbed();
+      v.classList.remove("hide");
+      const ext = (url.split("?")[0].split(".").pop() || "").toLowerCase();
+      if (ext === "mpd" && window.dashjs) {
+        dashP = dashjs.MediaPlayer().create(); dashP.initialize(v, url, true);
+        dashP.on("streamInitialized", () => {
+          const bs = dashP.getBitrateInfoListFor("video") || [];
+          if (bs.length > 1) {
+            const q = el("plQual"); q.classList.remove("hide");
+            q.innerHTML = `<option value="-1">Auto</option>` + bs.map((b, i) => `<option value="${i}">${b.height}p</option>`).join("");
+            q.onchange = () => { const i = +q.value; dashP.updateSettings({ streaming: { abr: { autoSwitchBitrate: { video: i < 0 } } } }); if (i >= 0) dashP.setQualityFor("video", i); };
+          }
+          const tr = dashP.getTracksFor("audio") || [];
+          if (tr.length > 1) {
+            const a = el("plAudio"); a.classList.remove("hide");
+            a.innerHTML = tr.map((t, i) => `<option value="${i}">${t.lang || "Audio " + (i + 1)}</option>`).join("");
+            a.onchange = () => dashP.setCurrentTrack(tr[+a.value]);
+          }
+        });
+      } else if ((ext === "m3u8" || ext === "m3u" || url.includes(".m3u8")) && window.Hls?.isSupported()) {
+        hls = new Hls({ capLevelToPlayerSize: true, enableWorker: true });
+        hls.loadSource(url); hls.attachMedia(v);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          v.play().catch(()=>{});
+          if (hls.levels.length > 1) {
+            const q = el("plQual"); q.classList.remove("hide");
+            q.innerHTML = `<option value="-1">Auto</option>` + hls.levels.map((l, i) => `<option value="${i}">${l.height || l.bitrate}p</option>`).join("");
+            q.onchange = () => hls.currentLevel = +q.value;
+          }
+          const at = hls.audioTracks || [];
+          if (at.length > 1) {
+            const a = el("plAudio"); a.classList.remove("hide");
+            a.innerHTML = at.map((t, i) => `<option value="${i}">${t.name || t.lang}</option>`).join("");
+            a.onchange = () => hls.audioTrack = +a.value;
+          }
+        });
+        hls.on(Hls.Events.ERROR, (_, d) => { if (d.fatal) toast("Error de reproducción: " + d.type); });
+      } else {
+        v.src = url;
+        v.play().catch(()=>{});
+      }
+    } else {
+      /* --- iframe embebido genérico (ok.ru, vk, drive, dailymotion, etc.): arranca de una, sin botón extra --- */
+      mode = "embed"; setNativeCtrls(false);
+      stopYT(); stopVimeo();
+      v.pause(); v.removeAttribute("src"); v.classList.add("hide");
+      embedHolder.classList.remove("hide");
+      embedHolder.innerHTML = `
+        <iframe src="${esc(url)}" frameborder="0" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen webkitallowfullscreen mozallowfullscreen scrolling="no" style="width:100%;height:100%;border:0;background:#000"></iframe>`;
+    }
+  };
+  load(srcs[0].url);
+  el("plSrc").onchange = e => {
+    const t = api.currentTime();
+    const nextUrl = srcs[+e.target.value].url;
+    load(nextUrl);
+    if (mode === "native") v.addEventListener("loadedmetadata", () => v.currentTime = t, { once: true });
+  };
+
+  /* subtítulos (solo aplica a video nativo) */
+  const subs = ctx.item?.subtitles || [];
+  if (subs.length) {
+    const s = el("plSub"); s.classList.remove("hide");
+    s.innerHTML = `<option value="-1">Sin subtítulos</option>` + subs.map((x, i) => `<option value="${i}">${esc(x.label || x.lang)}</option>`).join("");
+    subs.forEach(x => { const t = document.createElement("track"); t.kind = "subtitles"; t.label = x.label || x.lang; t.srclang = x.lang || "es"; t.src = x.url; v.appendChild(t); });
+    s.onchange = () => [...v.textTracks].forEach((t, i) => t.mode = i === +s.value ? "showing" : "disabled");
+  }
+
+  v.addEventListener("loadedmetadata", () => { if (ctx.startAt > 5 && ctx.startAt < v.duration - 20) v.currentTime = ctx.startAt; }, { once: true });
+  const fill = el("plFill"), dot = el("plDot"), tm = el("plTime");
+  let saved = 0, nextShown = false;
+  function updateProgressUI(cur, dur) {
+    const pct = dur ? cur / dur * 100 : 0;
+    fill.style.width = pct + "%"; dot.style.left = pct + "%";
+    tm.textContent = `${fmtTime(cur)} / ${fmtTime(dur)}`;
+    if (Date.now() - saved > 5000) { saved = Date.now(); ctx.save?.({ position: cur, duration: dur }); }
+    if (ctx.next && !nextShown && dur && dur - cur < 25) { nextShown = true; showNextUp(ctx.next); }
+  }
+  v.ontimeupdate = () => updateProgressUI(v.currentTime, v.duration);
+  v.onended = () => ctx.next ? ctx.next.go() : closePlayer();
+  v.onplay = () => el("plPlay").innerHTML = ic("pause");
+  v.onpause = () => el("plPlay").innerHTML = ic("play");
+  el("plPlay").onclick = () => api.paused() ? api.play() : api.pause();
+  el("plBack10").onclick = () => api.seek(Math.max(0, api.currentTime() - 10));
+  el("plFwd10").onclick = () => api.seek(api.currentTime() + 10);
+  el("plBack").onclick = closePlayer;
+  el("plFull").onclick = () => document.fullscreenElement ? document.exitFullscreen() : p.requestFullscreen?.();
+  el("plBar").onclick = e => { const r = e.currentTarget.getBoundingClientRect(); api.seek((e.clientX - r.left) / r.width * api.duration()); };
+
+  const ui = el("plui");
+  const wake = () => { ui.classList.remove("hidden"); clearTimeout(uiTimer); uiTimer = setTimeout(() => { if (!api.paused()) ui.classList.add("hidden"); }, 3500); };
+  p.onmousemove = wake; p.onclick = wake; p.ontouchstart = wake; wake();
+  p.onkeydown = e => {
+    wake();
+    if (e.key === " " || e.key === "Enter" && e.target === p) { api.paused() ? api.play() : api.pause(); e.preventDefault(); }
+    if (e.key === "MediaPlayPause") { api.paused() ? api.play() : api.pause(); }
+    if (e.key === "ArrowLeft" && document.activeElement === p) { api.seek(Math.max(0, api.currentTime() - 10)); e.preventDefault(); }
+    if (e.key === "ArrowRight" && document.activeElement === p) { api.seek(api.currentTime() + 10); e.preventDefault(); }
+  };
+  p.tabIndex = 0; p.focus();
+  if (curCtx.item?.id) updateDoc(doc(db, "content", curCtx.item.id), { views: (curCtx.item.views || 0) + 1 }).catch(()=>{});
+  track("play_content", { title: ctx.title });
+}
+function showNextUp(next) {
+  const n = document.createElement("div");
+  n.className = "next-up";
+  n.innerHTML = `<div style="font-size:12px;color:var(--fg-dim);margin-bottom:6px">A continuación</div>
+    <div style="font-weight:700;font-size:14px;margin-bottom:10px">${esc(next.label)}</div>
+    <button class="btn btn-brand mini" id="nuGo">${ic("play")} Reproducir</button>`;
+  el("player").appendChild(n);
+  el("nuGo").onclick = () => { n.remove(); next.go(); };
+  setTimeout(() => n.remove(), 24000);
+}
+function closePlayer() {
+  const v = el("vid");
+  if (ytPlayer && ytPlayer.getCurrentTime && curCtx) {
+    curCtx.save?.({ position: ytPlayer.getCurrentTime(), duration: ytPlayer.getDuration ? ytPlayer.getDuration() : 0 });
+  } else if (vmPlayer && curCtx) {
+    Promise.all([vmPlayer.getCurrentTime().catch(()=>0), vmPlayer.getDuration().catch(()=>0)])
+      .then(([position, duration]) => curCtx?.save?.({ position, duration }));
+  } else if (v && curCtx) {
+    curCtx.save?.({ position: v.currentTime, duration: v.duration });
+  }
+  if (hls) { hls.destroy(); hls = null; }
+  if (dashP) { dashP.reset(); dashP = null; }
+  clearInterval(ytPoll); ytPoll = null;
+  if (ytPlayer) { try { ytPlayer.destroy(); } catch (e) {} ytPlayer = null; }
+  if (vmPlayer) { try { vmPlayer.destroy(); } catch (e) {} vmPlayer = null; }
+  if (document.fullscreenElement) document.exitFullscreen().catch(()=>{});
+  el("player").classList.add("hide"); el("player").innerHTML = "";
+  curCtx = null;
+  if (S.page === "inicio") route("inicio", true);
+}
+
+/* ============================================================
+   PANEL ADMINISTRADOR
+   ============================================================ */
+function renderAdmin(v) {
+  if (S.role !== "admin") return route("inicio");
+  let tab = "dash";
+  const tabs = [["dash","Estadísticas"],["content","Contenido"],["series","Series y episodios"],["users","Usuarios"],["sellers","Vendedores"],["config","Configuración"]];
+  v.innerHTML = `<div class="panel"><h2 style="margin-bottom:18px">Panel de control</h2>
+    <div class="tabs" id="adTabs">${tabs.map(([k, t]) => `<button data-t="${k}" class="${k === tab ? "on" : ""}">${t}</button>`).join("")}</div>
+    <div id="adBody"></div></div>`;
+  const paint = () => {
+    v.querySelectorAll("#adTabs button").forEach(b => b.classList.toggle("on", b.dataset.t === tab));
+    const b = el("adBody");
+    if (tab === "dash") return adDash(b);
+    if (tab === "content") return adContent(b);
+    if (tab === "series") return adSeries(b);
+    if (tab === "users") return adUsers(b, "all");
+    if (tab === "sellers") return adSellers(b);
+    if (tab === "config") return adConfig(b);
+  };
+  v.querySelectorAll("#adTabs button").forEach(b => b.onclick = () => { tab = b.dataset.t; paint(); });
+  paint();
+}
+
+async function adDash(b) {
+  b.innerHTML = `<div class="spin"></div>`;
+  const us = await getDocs(collection(db, "users")).catch(() => null);
+  const users = us ? us.docs.map(d => ({ id: d.id, ...d.data() })) : [];
+  const movies = S.content.filter(x => x.type === "movie").length;
+  const series = S.content.filter(x => x.type === "tv").length;
+  const eps = S.content.reduce((n, x) => n + (x.seasons || []).reduce((m, s) => m + (s.episodes?.length || 0), 0), 0);
+  const views = S.content.reduce((n, x) => n + (x.views || 0), 0);
+  b.innerHTML = `<div class="stats">
+      <div class="stat"><div class="n">${movies}</div><div class="l">Películas</div></div>
+      <div class="stat"><div class="n">${series}</div><div class="l">Series</div></div>
+      <div class="stat"><div class="n">${eps}</div><div class="l">Episodios</div></div>
+      <div class="stat"><div class="n">${users.filter(u => u.role === "user").length}</div><div class="l">Usuarios</div></div>
+      <div class="stat"><div class="n">${users.filter(u => u.role === "seller").length}</div><div class="l">Vendedores</div></div>
+      <div class="stat"><div class="n">${views}</div><div class="l">Reproducciones</div></div>
+    </div>
+    <div class="box"><h4>Contenido más visto</h4><div class="tbl-wrap"><table>
+      <tr><th>Título</th><th>Tipo</th><th>Reproducciones</th></tr>
+      ${[...S.content].sort((a, c) => (c.views || 0) - (a.views || 0)).slice(0, 10).map(x =>
+        `<tr><td>${esc(x.title)}</td><td>${x.type === "tv" ? "Serie" : x.type === "iptv" ? "IPTV" : "Película"}</td><td>${x.views || 0}</td></tr>`).join("")
+        || `<tr><td colspan="3">Sin datos todavía.</td></tr>`}
+    </table></div></div>`;
+}
+
+/* --- Contenido: importar desde TMDB o manual --- */
+function adContent(b) {
+  b.innerHTML = `
+  <div class="box"><h4>Importar desde TMDB</h4>
+    <div class="form-grid">
+      <input class="inp" id="tqs" placeholder="Buscar título en TMDB…" />
+      <select class="inp" id="tqt"><option value="movie">Película</option><option value="tv">Serie</option></select>
+      <button class="btn btn-brand" id="tqGo">Buscar</button>
+    </div>
+    <div class="res" id="tqRes"></div>
+  </div>
+  <div class="box"><h4>Agregar manualmente</h4>
+    <div class="form-grid">
+      <input class="inp" id="mTitle" placeholder="Título" />
+      <select class="inp" id="mType"><option value="movie">Película</option><option value="tv">Serie</option></select>
+      <input class="inp" id="mYear" placeholder="Año" />
+      <input class="inp" id="mQual" placeholder="Calidad (4K, 1080p…)" />
+      <input class="inp" id="mPoster" placeholder="Póster (URL o ruta TMDB)" />
+      <input class="inp" id="mBack" placeholder="Backdrop (URL o ruta TMDB)" />
+      <input class="inp" id="mUrl" placeholder="Enlace del video (mp4/mkv/m3u8/mpd)" />
+      <input class="inp" id="mGen" placeholder="Géneros separados por coma" />
+    </div>
+    <div id="mUploader" style="margin-top:12px"></div>
+    <textarea class="inp" id="mOv" rows="3" placeholder="Sinopsis" style="margin-top:14px"></textarea>
+    <button class="btn btn-brand" id="mSave" style="margin-top:14px">Guardar título</button>
+  </div>
+  <div class="box"><h4>Catálogo (${S.content.filter(x => x.type !== "iptv").length})</h4>
+    <div class="tbl-wrap"><table id="cTbl">
+      <tr><th>Título</th><th>Tipo</th><th>Año</th><th>Destacado</th><th>Enlace</th><th></th></tr>
+      ${S.content.filter(x => x.type !== "iptv").map(x => `<tr>
+        <td>${esc(x.title)}</td><td>${x.type === "tv" ? "Serie" : "Película"}</td><td>${esc(x.year || "-")}</td>
+        <td><button class="pill ${x.featured ? "ok" : "no"}" data-feat="${x.id}">${x.featured ? "Sí" : "No"}</button></td>
+        <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(x.url || "—")}</td>
+        <td style="white-space:nowrap">
+          <button class="btn btn-line mini" data-edit="${x.id}">${ic("edit")} Editar</button>
+          <button class="btn btn-line mini" data-del="${x.id}">${ic("trash")} Borrar</button></td></tr>`).join("")}
+    </table></div></div>`;
+
+  mountUploader("mUploader", url => { el("mUrl").value = url; });
+  el("tqGo").onclick = async () => {
+    const q = el("tqs").value.trim(); if (!q) return;
+    const type = el("tqt").value;
+    el("tqRes").innerHTML = `<div class="spin"></div>`;
+    try {
+      const r = await T.search(q, type);
+      el("tqRes").innerHTML = r.results.slice(0, 24).map(x => `
+        <button class="card" data-tid="${x.id}" tabindex="0"><img src="${IMG(x.poster_path) || PH}" alt="" onerror="this.src='${PH}'" />
+        <span class="lbl">${esc(x.title || x.name)}</span></button>`).join("") || `<p class="empty">Sin resultados</p>`;
+      el("tqRes").querySelectorAll("[data-tid]").forEach(c => c.onclick = () => importTMDB(type, c.dataset.tid));
+    } catch (e) { el("tqRes").innerHTML = `<p class="empty">Error al consultar TMDB: ${esc(e.message)}</p>`; }
+  };
+  el("mSave").onclick = async () => {
+    const t = el("mTitle").value.trim(); if (!t) return toast("Escribe un título");
+    await addDoc(collection(db, "content"), {
+      title: t, type: el("mType").value, year: el("mYear").value, quality: el("mQual").value || "HD",
+      poster: el("mPoster").value, backdrop: el("mBack").value, url: el("mUrl").value,
+      genres: el("mGen").value.split(",").map(s => s.trim()).filter(Boolean),
+      overview: el("mOv").value, featured: false, views: 0, seasons: [], createdAt: serverTimestamp()
+    });
+    toast("Título guardado"); route("panel");
+  };
+  b.querySelectorAll("[data-feat]").forEach(x => x.onclick = async () => {
+    const it = S.content.find(c => c.id === x.dataset.feat);
+    await updateDoc(doc(db, "content", it.id), { featured: !it.featured });
+    toast("Hero Slider actualizado");
+  });
+  b.querySelectorAll("[data-del]").forEach(x => x.onclick = async () => {
+    if (!confirm("¿Eliminar este título?")) return;
+    await deleteDoc(doc(db, "content", x.dataset.del)); toast("Eliminado");
+  });
+  b.querySelectorAll("[data-edit]").forEach(x => x.onclick = () => editContentModal(x.dataset.edit));
+}
+
+function editContentModal(id) {
+  const it = S.content.find(c => c.id === id);
+  if (!it) return;
+  el("modal").innerHTML = `<div class="overlay"><div class="sheet" style="max-width:640px"><div class="bd">
+    <h2 style="margin:0 0 18px;font-size:22px">Editar título</h2>
+    <div class="form-grid">
+      <input class="inp" id="eTitle" placeholder="Título" value="${esc(it.title || "")}" />
+      <select class="inp" id="eType">
+        <option value="movie" ${it.type !== "tv" ? "selected" : ""}>Película</option>
+        <option value="tv" ${it.type === "tv" ? "selected" : ""}>Serie</option>
+      </select>
+      <input class="inp" id="eYear" placeholder="Año" value="${esc(it.year || "")}" />
+      <input class="inp" id="eQual" placeholder="Calidad (4K, 1080p…)" value="${esc(it.quality || "")}" />
+      <input class="inp" id="ePoster" placeholder="Póster (URL o ruta TMDB)" value="${esc(it.poster || "")}" />
+      <input class="inp" id="eBack" placeholder="Backdrop (URL o ruta TMDB)" value="${esc(it.backdrop || "")}" />
+      <input class="inp" id="eUrl" placeholder="Enlace del video (mp4/mkv/m3u8/mpd)" value="${esc(it.url || "")}" style="grid-column:1/-1" />
+      <input class="inp" id="eGen" placeholder="Géneros separados por coma" value="${esc((it.genres || []).join(", "))}" style="grid-column:1/-1" />
+    </div>
+    <div id="eUploader" style="margin-top:12px"></div>
+    <textarea class="inp" id="eOv" rows="3" placeholder="Sinopsis" style="margin-top:14px">${esc(it.overview || "")}</textarea>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-brand" style="flex:1" id="eSave">Guardar cambios</button>
+      <button class="btn btn-line" id="eCancel">Cancelar</button>
+    </div>
+  </div></div></div>`;
+  mountUploader("eUploader", url => { el("eUrl").value = url; });
+  el("eCancel").onclick = () => { el("modal").innerHTML = ""; };
+  el("eSave").onclick = async () => {
+    const t = el("eTitle").value.trim(); if (!t) return toast("Escribe un título");
+    await updateDoc(doc(db, "content", it.id), {
+      title: t, type: el("eType").value, year: el("eYear").value, quality: el("eQual").value || "HD",
+      poster: el("ePoster").value, backdrop: el("eBack").value, url: el("eUrl").value,
+      genres: el("eGen").value.split(",").map(s => s.trim()).filter(Boolean),
+      overview: el("eOv").value
+    });
+    el("modal").innerHTML = ""; toast("Título actualizado"); route("panel");
+  };
+}
+
+async function importTMDB(type, tid) {
+  toast("Importando desde TMDB…");
+  try {
+    const d = type === "movie" ? await T.movie(tid) : await T.tv(tid);
+    const item = {
+      tmdbId: Number(tid), type, title: d.title || d.name,
+      original: d.original_title || d.original_name || "",
+      year: (d.release_date || d.first_air_date || "").slice(0, 4),
+      overview: d.overview || "", poster: d.poster_path || "", backdrop: d.backdrop_path || "",
+      logo: pickLogo(d.images), rating: d.vote_average || 0,
+      genres: (d.genres || []).map(g => g.name),
+      director: (d.credits?.crew || []).find(c => c.job === "Director")?.name
+        || (d.created_by || [])[0]?.name || "",
+      cast: (d.credits?.cast || []).slice(0, 16).map(c => ({ name: c.name, character: c.character, photo: c.profile_path || "" })),
+      trailer: (() => { const t = (d.videos?.results || []).find(v => v.site === "YouTube" && /trailer|tráiler/i.test(v.type + v.name)); return t ? "https://www.youtube.com/watch?v=" + t.key : ""; })(),
+      recommendations: (d.recommendations?.results || []).slice(0, 12).map(r => ({ id: r.id, title: r.title || r.name, poster: r.poster_path })),
+      quality: "1080p", featured: false, views: 0, url: "", seasons: [], createdAt: serverTimestamp()
+    };
+    if (type === "tv") {
+      const seasons = [];
+      for (const s of (d.seasons || []).filter(x => x.season_number > 0)) {
+        const sd = await T.season(tid, s.season_number).catch(() => null);
+        seasons.push({
+          number: s.season_number, name: s.name, poster: s.poster_path || "",
+          episodes: (sd?.episodes || []).map(e => ({
+            number: e.episode_number, title: e.name, overview: e.overview || "",
+            still: e.still_path || "", url: "", runtime: e.runtime || 0
+          }))
+        });
+      }
+      item.seasons = seasons;
+    }
+    const ex = S.content.find(c => c.tmdbId === Number(tid) && c.type === type);
+    if (ex) { await updateDoc(doc(db, "content", ex.id), item); toast("Actualizado: " + item.title); }
+    else { await addDoc(collection(db, "content"), item); toast("Importado: " + item.title); }
+  } catch (e) { console.error(e); toast("Error al importar: " + e.message); }
+}
+
+/* --- Series: cargar enlaces por episodio --- */
+function adSeries(b) {
+  const series = S.content.filter(x => x.type === "tv");
+  b.innerHTML = `<div class="box"><h4>Enlaces de temporadas y episodios</h4>
+    ${series.length ? `<select class="inp" id="svSel" style="max-width:340px">${series.map(s => `<option value="${s.id}">${esc(s.title)}</option>`).join("")}</select>
+    <div id="svBox" style="margin-top:18px"></div>` : `<p class="empty">Aún no hay series. Impórtalas desde TMDB en la pestaña Contenido.</p>`}</div>`;
+  if (!series.length) return;
+  const paint = () => {
+    const it = S.content.find(x => x.id === el("svSel").value);
+    const box = el("svBox");
+    box.innerHTML = `
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+        <button class="btn btn-line mini" id="svAddS">+ Nueva temporada</button>
+        <button class="btn btn-line mini" id="svSync">${ic("refresh")} Resincronizar con TMDB</button>
+      </div>
+      ${(it.seasons || []).map((s, si) => `
+        <div class="box" style="background:var(--surface-2)">
+          <h4 style="display:flex;align-items:center;gap:10px">Temporada ${s.number}
+            <button class="btn btn-line mini" data-adde="${si}">+ Episodio</button>
+            <button class="btn btn-line mini" data-dels="${si}">Eliminar</button></h4>
+          <div class="tbl-wrap"><table><tr><th>#</th><th>Título</th><th>Enlace</th><th></th><th></th></tr>
+          ${(s.episodes || []).map((e, ei) => `<tr><td>${e.number}</td><td>${esc(e.title || "")}</td>
+            <td><input class="inp" style="padding:8px" data-ep="${si}:${ei}" value="${esc(e.url || "")}" placeholder="mp4 / m3u8 / mpd" /></td>
+            <td><label class="btn btn-line mini" style="cursor:pointer;white-space:nowrap">${ic("plus")} Subir<input type="file" accept="video/*" style="display:none" data-epup="${si}:${ei}" /></label></td>
+            <td><button class="btn btn-line mini" data-dele="${si}:${ei}">${ic("trash")}</button></td></tr>`).join("")}
+          </table></div>
+        </div>`).join("") || `<p class="empty">Esta serie no tiene temporadas.</p>`}
+      <button class="btn btn-brand" id="svSave">Guardar cambios</button>`;
+    box.querySelectorAll("[data-epup]").forEach(inpFile => {
+      inpFile.onchange = async () => {
+        const file = inpFile.files[0]; if (!file) return;
+        const [si, ei] = inpFile.dataset.epup.split(":").map(Number);
+        const target = box.querySelector(`[data-ep="${si}:${ei}"]`);
+        const orig = target.value;
+        target.value = `Subiendo ${file.name}… (0%)`; target.disabled = true;
+        try {
+          const url = await uploadVideoToR2(file, pct => { target.value = `Subiendo ${file.name}… (${pct.toFixed(0)}%)`; });
+          target.value = url; toast("Episodio subido a la nube");
+        } catch (e) {
+          target.value = orig; toast("Error subiendo: " + e.message);
+        } finally { target.disabled = false; inpFile.value = ""; }
+      };
+    });
+    box.querySelectorAll("[data-dele]").forEach(x => x.onclick = () => {
+      const [si, ei] = x.dataset.dele.split(":").map(Number);
+      it.seasons[si].episodes.splice(ei, 1); paint();
+    });
+    box.querySelectorAll("[data-dels]").forEach(x => x.onclick = () => { it.seasons.splice(+x.dataset.dels, 1); paint(); });
+    box.querySelectorAll("[data-adde]").forEach(x => x.onclick = () => {
+      const s = it.seasons[+x.dataset.adde];
+      s.episodes = s.episodes || [];
+      s.episodes.push({ number: s.episodes.length + 1, title: "Episodio " + (s.episodes.length + 1), overview: "", still: "", url: "" });
+      paint();
+    });
+    el("svAddS").onclick = () => { it.seasons = it.seasons || []; it.seasons.push({ number: it.seasons.length + 1, name: "Temporada " + (it.seasons.length + 1), episodes: [] }); paint(); };
+    el("svSync").onclick = () => it.tmdbId ? importTMDB("tv", it.tmdbId) : toast("Esta serie no está vinculada a TMDB");
+    el("svSave").onclick = async () => {
+      box.querySelectorAll("[data-ep]").forEach(inp => {
+        const [si, ei] = inp.dataset.ep.split(":").map(Number);
+        it.seasons[si].episodes[ei].url = inp.value.trim();
+      });
+      await updateDoc(doc(db, "content", it.id), { seasons: it.seasons });
+      toast("Episodios guardados");
+    };
+  };
+  el("svSel").onchange = paint; paint();
+}
+
+/* --- Usuarios --- */
+async function adUsers(b, scope) {
+  b.innerHTML = `<div class="spin"></div>`;
+  /* Para vendedores se filtra directamente en la consulta (createdBy == su uid):
+     pedir la colección completa "users" suele fallar por permisos de Firestore
+     para cuentas que no son admin, y eso hacía que la lista de clientes no cargara. */
+  const snap = scope === "mine"
+    ? await getDocs(query(collection(db, "users"), where("createdBy", "==", S.user.uid))).catch(() => null)
+    : await getDocs(collection(db, "users")).catch(() => null);
+  let users = snap ? snap.docs.map(d => ({ id: d.id, ...d.data() })) : [];
+
+  /* Los vendedores solo pueden crear cuentas si el admin les asignó créditos */
+  let sellerCredits = null;
+  if (scope === "mine") {
+    const meSnap = await getDoc(doc(db, "users", S.user.uid)).catch(() => null);
+    sellerCredits = meSnap && meSnap.exists() ? (meSnap.data().credits || 0) : 0;
+    if (S.account) S.account.credits = sellerCredits;
+  }
+
+  b.innerHTML = `
+    ${scope === "mine" && !snap ? `<div class="err">No se pudieron cargar tus clientes (permiso denegado). Contacta al administrador.</div>` : ""}
+    <div class="box"><h4>Crear cuenta de usuario</h4>
+      ${scope === "mine" ? `<p class="note" style="text-align:left;margin-top:0">Créditos disponibles: <b style="color:${sellerCredits > 0 ? "#a8f0c6" : "#ffb3bd"}">${sellerCredits}</b>. Cada cuenta creada descuenta 1 crédito. ${sellerCredits <= 0 ? "Contacta al administrador para que te asigne más créditos." : ""}</p>` : ""}
+      <div class="form-grid">
+        <input class="inp" id="nuEmail" placeholder="Correo del cliente" />
+        <input class="inp" id="nuPass" placeholder="Contraseña" />
+        <input class="inp" id="nuDays" type="number" value="30" placeholder="Días de vigencia" />
+        <input class="inp" id="nuNote" placeholder="Nombre o referencia" />
+      </div>
+      <button class="btn btn-brand" id="nuGo" style="margin-top:14px" ${scope === "mine" && sellerCredits <= 0 ? "disabled" : ""}>Crear cuenta</button>
+      <p class="note" style="text-align:left">Tu sesión se mantiene activa al crear la cuenta.</p>
+    </div>
+    <div class="box"><h4>${scope === "mine" ? "Mis clientes" : "Usuarios"} (${users.length})</h4><div class="tbl-wrap"><table>
+      <tr><th>Correo</th><th>Rol</th><th>Vence</th><th>Estado</th><th></th></tr>
+      ${users.map(u => {
+        const exp = u.expiresAt?.toDate ? u.expiresAt.toDate() : (u.expiresAt ? new Date(u.expiresAt) : null);
+        const vig = !exp || exp > new Date();
+        return `<tr><td>${esc(u.email)}${u.note ? ` <span style="color:var(--fg-dim)">· ${esc(u.note)}</span>` : ""}</td>
+          <td>${u.role === "admin" ? "Administración" : u.role === "seller" ? "Vendedor" : "Usuario"}</td>
+          <td>${exp ? exp.toLocaleDateString("es-MX") : "Sin límite"}</td>
+          <td><span class="pill ${u.active !== false && vig ? "ok" : "no"}">${u.active === false ? "Bloqueado" : vig ? "Activo" : "Vencido"}</span></td>
+          <td style="white-space:nowrap">
+            <button class="btn btn-line mini" data-ren="${u.id}">+30 días</button>
+            <button class="btn btn-line mini" data-edit="${u.id}">Editar</button>
+            <button class="btn btn-line mini" data-creds="${u.id}">Ver clave</button>
+            <button class="btn btn-line mini" data-tog="${u.id}">${u.active === false ? "Desbloquear" : "Bloquear"}</button>
+          </td></tr>`;
+      }).join("") || `<tr><td colspan="5">${scope === "mine" ? "Aún no tienes clientes registrados." : "Sin usuarios."}</td></tr>`}
+    </table></div></div>`;
+  el("nuGo").onclick = async () => {
+    const email = el("nuEmail").value.trim(), pass = el("nuPass").value;
+    if (!email || pass.length < 6) return toast("Correo válido y contraseña de 6+ caracteres");
+    if (scope === "mine" && sellerCredits <= 0) return toast("No tienes créditos disponibles. Contacta al administrador.");
+    const sellerId = S.user.uid, sellerEmail = S.user.email;
+    const note = el("nuNote").value.trim();
+    try {
+      /* Se descuenta el crédito primero, mientras aún estamos autenticados como el vendedor */
+      if (scope === "mine") await updateDoc(doc(db, "users", sellerId), { credits: increment(-1) });
+      /* Se crea el usuario en una app secundaria de Firebase para no perder
+         ni cambiar la sesión activa (admin o vendedor) que hizo el alta. */
+      const uid = await createAuxUser(email, pass);
+      const days = +el("nuDays").value || 30;
+      await setDoc(doc(db, "users", uid), {
+        email, pass, role: "user", active: true, note,
+        createdBy: sellerId, createdByEmail: sellerEmail, createdAt: serverTimestamp(),
+        expiresAt: new Date(Date.now() + days * 864e5),
+        profiles: [{ id: "p1", name: (note || email.split("@")[0]).slice(0, 14), avatar: AVATARS[0] }]
+      });
+      await addDoc(collection(db, "sales"), { sellerId, sellerEmail, clientEmail: email, days, at: serverTimestamp() });
+      toast("Cuenta creada correctamente" + (scope === "mine" ? " · 1 crédito descontado" : ""));
+      el("nuEmail").value = ""; el("nuPass").value = ""; el("nuNote").value = ""; el("nuDays").value = 30;
+      showCredsModal("Cuenta creada", email, pass, note);
+      adUsers(b, scope);
+    } catch (e) {
+      /* Si falló la creación, se devuelve el crédito descontado */
+      if (scope === "mine") await updateDoc(doc(db, "users", sellerId), { credits: increment(1) }).catch(() => {});
+      toast(e.code === "auth/email-already-in-use" ? "Ese correo ya tiene cuenta" : "Error: " + e.message);
+    }
+  };
+  b.querySelectorAll("[data-ren]").forEach(x => x.onclick = async () => {
+    const u = users.find(z => z.id === x.dataset.ren);
+    const cur = u.expiresAt?.toDate ? u.expiresAt.toDate() : new Date();
+    const base = cur > new Date() ? cur : new Date();
+    await updateDoc(doc(db, "users", u.id), { expiresAt: new Date(base.getTime() + 30 * 864e5), active: true });
+    await addDoc(collection(db, "sales"), { sellerId: S.user.uid, sellerEmail: S.user.email, clientEmail: u.email, days: 30, renewal: true, at: serverTimestamp() });
+    toast("Renovado 30 días"); adUsers(b, scope);
+  });
+  b.querySelectorAll("[data-tog]").forEach(x => x.onclick = async () => {
+    const u = users.find(z => z.id === x.dataset.tog);
+    await updateDoc(doc(db, "users", u.id), { active: u.active === false });
+    adUsers(b, scope);
+  });
+  b.querySelectorAll("[data-edit]").forEach(x => x.onclick = () => {
+    const u = users.find(z => z.id === x.dataset.edit);
+    editUserModal(u, () => adUsers(b, scope));
+  });
+  b.querySelectorAll("[data-creds]").forEach(x => x.onclick = () => {
+    const u = users.find(z => z.id === x.dataset.creds);
+    if (!u.pass) return toast("Esta cuenta se creó antes de guardar contraseñas; usa Editar para restablecerla por correo.");
+    showCredsModal("Credenciales", u.email, u.pass, u.note);
+  });
+}
+
+/* --- Vendedores --- */
+async function adSellers(b) {
+  b.innerHTML = `<div class="spin"></div>`;
+  const snap = await getDocs(query(collection(db, "users"), where("role", "==", "seller"))).catch(() => null);
+  const sellers = snap ? snap.docs.map(d => ({ id: d.id, ...d.data() })) : [];
+  b.innerHTML = `<div class="box"><h4>Crear vendedor</h4>
+    <div class="form-grid">
+      <input class="inp" id="svEmail" placeholder="Correo del vendedor" />
+      <input class="inp" id="svPass" placeholder="Contraseña" />
+      <input class="inp" id="svName" placeholder="Nombre del vendedor" />
+      <input class="inp" id="svCredits" type="number" min="0" value="0" placeholder="Créditos iniciales" />
+    </div>
+    <button class="btn btn-brand" id="svGo" style="margin-top:14px">Crear vendedor</button>
+    <p class="note" style="text-align:left">Cada crédito permite crear 1 cuenta de cliente. Al crearse una cuenta, se descuenta 1 crédito al vendedor. Tu sesión de administrador se mantiene activa.</p></div>
+  <div class="box"><h4>Vendedores (${sellers.length})</h4><div class="tbl-wrap"><table>
+    <tr><th>Correo</th><th>Nombre</th><th>Créditos</th><th>Estado</th><th></th></tr>
+    ${sellers.map(s => `<tr><td>${esc(s.email)}</td><td>${esc(s.note || "-")}</td>
+      <td><b>${s.credits || 0}</b></td>
+      <td><span class="pill ${s.active === false ? "no" : "ok"}">${s.active === false ? "Bloqueado" : "Activo"}</span></td>
+      <td style="white-space:nowrap">
+        <input class="inp mini" style="width:70px;display:inline-block" type="number" min="1" value="10" data-credamt="${s.id}" />
+        <button class="btn btn-line mini" data-addcred="${s.id}">Agregar créditos</button>
+        <button class="btn btn-line mini" data-editsel="${s.id}">Editar</button>
+        <button class="btn btn-line mini" data-credsel="${s.id}">Ver clave</button>
+        <button class="btn btn-line mini" data-tsel="${s.id}">${s.active === false ? "Desbloquear" : "Bloquear"}</button>
+      </td></tr>`).join("")
+      || `<tr><td colspan="5">Sin vendedores.</td></tr>`}
+  </table></div></div>`;
+  el("svGo").onclick = async () => {
+    const email = el("svEmail").value.trim(), pass = el("svPass").value;
+    if (!email || pass.length < 6) return toast("Correo válido y contraseña de 6+ caracteres");
+    const credits = Math.max(0, +el("svCredits").value || 0);
+    const note = el("svName").value.trim();
+    const go = el("svGo"); go.disabled = true; const prevLabel = go.textContent; go.textContent = "Creando...";
+    try {
+      /* Se crea el usuario en una app secundaria de Firebase para no perder
+         ni cambiar la sesión de administrador que está activa ahora mismo. */
+      const uid = await createAuxUser(email, pass);
+      await setDoc(doc(db, "users", uid), {
+        email, pass, role: "seller", active: true, note, credits,
+        createdBy: S.user.uid, createdAt: serverTimestamp(), expiresAt: null,
+        profiles: [{ id: "p1", name: "Ventas", avatar: AVATARS[1] }]
+      });
+      toast("Vendedor creado");
+      el("svEmail").value = ""; el("svPass").value = ""; el("svName").value = ""; el("svCredits").value = 0;
+      showCredsModal("Vendedor creado", email, pass, note);
+      adSellers(b);
+    } catch (e) {
+      toast(e.code === "auth/email-already-in-use" ? "Ese correo ya existe" : "Error: " + e.message);
+    } finally {
+      go.disabled = false; go.textContent = prevLabel;
+    }
+  };
+  b.querySelectorAll("[data-tsel]").forEach(x => x.onclick = async () => {
+    const s = sellers.find(z => z.id === x.dataset.tsel);
+    await updateDoc(doc(db, "users", s.id), { active: s.active === false }); adSellers(b);
+  });
+  b.querySelectorAll("[data-addcred]").forEach(x => x.onclick = async () => {
+    const id = x.dataset.addcred;
+    const amt = Math.max(1, +b.querySelector(`[data-credamt="${id}"]`).value || 0);
+    await updateDoc(doc(db, "users", id), { credits: increment(amt) });
+    toast(`Se agregaron ${amt} créditos`); adSellers(b);
+  });
+  b.querySelectorAll("[data-editsel]").forEach(x => x.onclick = () => {
+    const s = sellers.find(z => z.id === x.dataset.editsel);
+    editUserModal(s, () => adSellers(b));
+  });
+  b.querySelectorAll("[data-credsel]").forEach(x => x.onclick = () => {
+    const s = sellers.find(z => z.id === x.dataset.credsel);
+    if (!s.pass) return toast("Este vendedor se creó antes de guardar contraseñas; usa Editar para restablecerla por correo.");
+    showCredsModal("Credenciales", s.email, s.pass, s.note);
+  });
+}
+
+/* --- Configuración --- */
+function adConfig(b) {
+  const on = S.settings.heroEnabled !== false;
+  b.innerHTML = `<div class="box"><h4>Hero Slider</h4>
+      <button class="switch ${on ? "on" : ""}" id="cfHero"><i></i> Mostrar Hero Slider en la pantalla de inicio</button>
+      <p class="note" style="text-align:left">Los títulos marcados como <b>Destacado</b> en Contenido aparecen en el slider y rotan cada 6 segundos.</p></div>
+    <div class="box"><h4>Identidad visual</h4>
+      <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:center">
+        <img src="${LOGO}" style="width:180px" alt="Logo" />
+        <img src="${BANNER}" style="width:280px;border-radius:12px" alt="Banner" />
+      </div></div>
+    <div class="box"><h4>Credenciales de acceso</h4>
+      <p class="note" style="text-align:left">Cuenta de administración: <b>${esc(ADMIN_EMAIL)}</b>. El registro público está deshabilitado: las cuentas solo se crean desde este panel o por un vendedor.</p></div>`;
+  el("cfHero").onclick = async () => {
+    const nv = !(S.settings.heroEnabled !== false);
+    S.settings.heroEnabled = nv;
+    await setDoc(doc(db, "settings", "app"), { heroEnabled: nv }, { merge: true });
+    adConfig(b); toast(nv ? "Hero Slider activado" : "Hero Slider desactivado");
+  };
+}
+
+/* ============================================================
+   PANEL VENDEDOR
+   ============================================================ */
+async function renderSeller(v) {
+  if (S.role !== "seller") return route("inicio");
+  let tab = "clients";
+  v.innerHTML = `<div class="panel"><h2 style="margin-bottom:18px">Mis clientes</h2>
+    <div class="tabs" id="seTabs">
+      <button data-t="clients" class="on">Clientes</button>
+      <button data-t="sales">Ventas</button>
+    </div><div id="seBody"></div></div>`;
+  const paint = () => {
+    v.querySelectorAll("#seTabs button").forEach(b => b.classList.toggle("on", b.dataset.t === tab));
+    tab === "clients" ? adUsers(el("seBody"), "mine") : sellerSales(el("seBody"));
+  };
+  v.querySelectorAll("#seTabs button").forEach(b => b.onclick = () => { tab = b.dataset.t; paint(); });
+  paint();
+}
+async function sellerSales(b) {
+  b.innerHTML = `<div class="spin"></div>`;
+  const snap = await getDocs(query(collection(db, "sales"), where("sellerId", "==", S.user.uid))).catch(() => null);
+  const sales = snap ? snap.docs.map(d => d.data()) : [];
+  const month = sales.filter(s => s.at?.toDate && s.at.toDate() > new Date(Date.now() - 30 * 864e5));
+  b.innerHTML = `<div class="stats">
+      <div class="stat"><div class="n">${sales.length}</div><div class="l">Ventas totales</div></div>
+      <div class="stat"><div class="n">${month.length}</div><div class="l">Últimos 30 días</div></div>
+      <div class="stat"><div class="n">${sales.filter(s => s.renewal).length}</div><div class="l">Renovaciones</div></div>
+    </div>
+    <div class="box"><h4>Historial</h4><div class="tbl-wrap"><table>
+      <tr><th>Cliente</th><th>Tipo</th><th>Días</th><th>Fecha</th></tr>
+      ${sales.sort((a, c) => (c.at?.seconds || 0) - (a.at?.seconds || 0)).map(s => `<tr>
+        <td>${esc(s.clientEmail)}</td><td>${s.renewal ? "Renovación" : "Alta nueva"}</td><td>${s.days || 30}</td>
+        <td>${s.at?.toDate ? s.at.toDate().toLocaleDateString("es-MX") : "-"}</td></tr>`).join("")
+        || `<tr><td colspan="4">Sin ventas registradas.</td></tr>`}
+    </table></div></div>`;
+}
+
+/* ============================================================
+   PWA — manifest + service worker embebidos (sin archivos extra)
+   ============================================================ */
+(function pwa() {
+  const manifest = {
+    name: "Ultra TV", short_name: "Ultra TV", start_url: ".", display: "standalone",
+    orientation: "any", background_color: "#07070b", theme_color: "#07070b",
+    description: "Películas y series en Ultra TV.",
+    icons: [{ src: LOGO, sizes: "512x512", type: "image/png", purpose: "any maskable" },
+            { src: LOGO, sizes: "192x192", type: "image/png" }]
+  };
+  const link = document.createElement("link");
+  link.rel = "manifest";
+  link.href = URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: "application/manifest+json" }));
+  document.head.appendChild(link);
+})();
+
+window.addEventListener("error", e => console.warn("UltraTV:", e.message));
+</script>
+</body>
+</html>
